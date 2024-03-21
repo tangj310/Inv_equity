@@ -1,0 +1,9 @@
+flask
+flask-sqlalchemy
+yfinance
+pandas
+numpy
+pandas_datareader
+lxml 
+html5lib
+plotly
