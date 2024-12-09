@@ -35,7 +35,11 @@ async def home(request: Request):
 
 @app.post("/stock", response_class=HTMLResponse)
 async def get_stock_graph(request: Request, symbol: str = Form(...)):
-    """Fetch stock data and generate a Plotly graph for the given symbol."""
+    """
+    Fetch stock data and generate a Plotly graph for the given symbol.
+    """
+    print(f"Received ticker: {symbol}")  # Debugging line
+
     try:
         # Fetch stock data
         stock_consolidate_df = fetch_stock_data(symbol)
@@ -50,6 +54,7 @@ async def get_stock_graph(request: Request, symbol: str = Form(...)):
                 "request": request
                 ,"graph_html": plotly_price_EPS_html
                 ,"symbol": symbol
+                ,"stock consolidate data": stock_consolidate_df
                 },
         )
     except Exception as e:
