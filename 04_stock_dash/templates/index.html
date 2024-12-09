@@ -1,0 +1,26 @@
+Templates (HTML files stored in the "templates" directory)
+"templates/index.html"
+<html>
+<head>
+    <title>Stock Dashboard</title>
+</head>
+<body>
+    <h1>Enter Stock Ticker</h1>
+    <form action="/stock" method="post">
+        <label for="ticker">Stock Ticker:</label>
+        <input type="text" id="ticker" name="ticker" required>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
+"templates/graph.html"
+<html>
+<head>
+    <title>Stock Graph</title>
+</head>
+<body>
+    <h1>Stock Metrics for {{ ticker }}</h1>
+    <div>{{ graph_html | safe }}</div>
+    <a href="/">Back to Home</a>
+</body>
+</html>
