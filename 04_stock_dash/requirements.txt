@@ -1,0 +1,8 @@
+yfinance
+fastapi
+uvicorn
+requests
+pandas
+numpy
+plotly
+jinja2
