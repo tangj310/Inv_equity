@@ -1,26 +1,19 @@
-Templates (HTML files stored in the "templates" directory)
-"templates/index.html"
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Stock Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Ticker</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <h1>Enter Stock Ticker</h1>
-    <form action="/stock" method="post">
-        <label for="ticker">Stock Ticker:</label>
-        <input type="text" id="ticker" name="ticker" required>
-        <button type="submit">Submit</button>
-    </form>
-</body>
-</html>
-"templates/graph.html"
-<html>
-<head>
-    <title>Stock Graph</title>
-</head>
-<body>
-    <h1>Stock Metrics for {{ ticker }}</h1>
-    <div>{{ graph_html | safe }}</div>
-    <a href="/">Back to Home</a>
+    <div class="container">
+        <h1>Stock Ticker Analysis</h1>
+        <form action="/stock" method="post">
+            <label for="symbol">Enter Stock Ticker:</label>
+            <input type="text" id="symbol" name="symbol" required>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
 </body>
 </html>
