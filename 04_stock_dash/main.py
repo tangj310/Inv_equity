@@ -46,15 +46,16 @@ async def get_stock_graph(request: Request, symbol: str = Form(...)):
 
         # Create Plotly graph
         plotly_price_EPS_html = plotly_price_EPS_graph(stock_consolidate_df)
-
+        plotly_pe_ttm_avg_html = plotly_pe_ttm_avg_graph(stock_consolidate_df)
         # Return graph to user
         return templates.TemplateResponse(
             "graph.html",
             {
                 "request": request
-                ,"graph_html": plotly_price_EPS_html
+                ,"plotly_price_EPS_graph_html": plotly_price_EPS_html
+                ,"plotly_pe_ttm_avg_graph_html": plotly_price_EPS_html
                 ,"symbol": symbol
-                ,"stock consolidate data": stock_consolidate_df
+
                 },
         )
     except Exception as e:
@@ -242,15 +243,6 @@ def plotly_price_EPS_graph(stock_consolidate_df):
         yaxis="y2"
     ))
 
-    # Add PE_TTM on secondary y-axis (right)
-    fig.add_trace(go.Scatter(
-        x=stock_consolidate_df.index,
-        y=stock_consolidate_df["PE_TTM"],
-        mode='lines',
-        line=dict(color='blue', dash='dot'),
-        name='PE_TTM',
-        yaxis="y2"
-    ))
 
     # Update layout to remove grid and configure dual y-axes
     fig.update_layout(
@@ -277,6 +269,55 @@ def plotly_price_EPS_graph(stock_consolidate_df):
         template="plotly_white",
         plot_bgcolor='white'  # Background color
     )
+    # Convert Plotly graph to HTML
+    graph_html = fig.to_html(full_html=False)
+
+    return graph_html
+
+
+
+def plotly_pe_ttm_avg_graph(stock_consolidate_df):
+    """
+    Generate a PE TTM statics graph from the stock DataFrame.
+    """
+
+        # Create the figure
+    fig = go.Figure()
+
+    # Add PE_TTM on primary y-axis
+    fig.add_trace(go.Scatter(
+        x=stock_consolidate_df.index,
+        y=stock_consolidate_df["PE_TTM"],
+        mode='lines',
+        line=dict(color='black'),
+        name='PE_TTM',
+    ))
+
+    # Add PE_TTM_avg as a horizontal line
+    fig.add_trace(go.Scatter(
+        x=stock_consolidate_df.index,
+        y=[stock_consolidate_df["PE_TTM_avg"][0]] * len(stock_consolidate_df.index),
+        mode='lines',
+        line=dict(color='green', dash='dash'),
+        name='PE_TTM_avg',
+    ))
+
+    # Update layout
+    fig.update_layout(
+        title="PE TTM Over Time",
+        xaxis=dict(
+            title=None,
+            showgrid=False,
+        ),
+        yaxis=dict(
+            title=None,
+            showgrid=False,
+        ),
+        legend_title="Metrics",
+        template="plotly_white",
+        plot_bgcolor='white',  # Background color
+    )
+
     # Convert Plotly graph to HTML
     graph_html = fig.to_html(full_html=False)
 

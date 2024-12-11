@@ -7,12 +7,27 @@
     <link rel="stylesheet" href="/static/styles.css">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
+
 <body>
     <div class="container">
         <h1>Stock Analysis: {{ symbol }}</h1>
-        <div class="graph-container">
-            {{ graph_html | safe }}
+        
+        <!-- Price and EPS Graph Section -->
+        <div class="graph-section">
+            <h2>Price and EPS TTM</h2>
+            <div class="graph-container">
+                {{ price_eps_graph_html | safe }}
+            </div>
         </div>
+        
+        <!-- PE TTM and Average Graph Section -->
+        <div class="graph-section">
+            <h2>PE TTM Stats</h2>
+            <div class="graph-container">
+                {{ pe_ttm_graph_html | safe }}
+            </div>
+        </div>
+
         <a href="/" class="back-button">Go Back</a>
     </div>
 </body>
