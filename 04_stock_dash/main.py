@@ -117,6 +117,7 @@ def fetch_stock_data(symbol):
             Daily_stock_df.index = pd.to_datetime(Daily_stock_df.index)
 
 
+    # split the stock price if applied
     for date_i in Daily_stock_df.index.date:
         for date_j in stock_split_record_df['effective_date'].dt.date:
             if date_i == date_j:
