@@ -44,12 +44,6 @@ async def get_stock_graph(request: Request, symbol: str = Form(...)):
         # Fetch stock data
         stock_consolidate_df = fetch_stock_data(symbol)
 
-        # Create the data tables
-        pd_stock_table_html = stock_consolidate_df.head(10).to_html(
-            classes='table table-striped'
-            ,index=True
-            )
-
         # Create Plotly graph
         plotly_price_EPS_html = plotly_price_EPS_graph(stock_consolidate_df)
         plotly_pe_ttm_avg_html = plotly_pe_ttm_avg_graph(stock_consolidate_df)
@@ -60,7 +54,6 @@ async def get_stock_graph(request: Request, symbol: str = Form(...)):
                 "request": request
                 ,"plotly_price_EPS_html": plotly_price_EPS_html
                 ,"plotly_pe_ttm_avg_html": plotly_pe_ttm_avg_html
-                ,"pd_stock_table_html": pd_stock_table_html
                 ,"symbol": symbol
 
                 },
@@ -256,7 +249,7 @@ def plotly_price_EPS_graph(stock_consolidate_df):
         mode='lines',
         fill='tonexty',  # Shadow effect
         line=dict(color='green'),
-        name='EPS_TTM',
+        name='EPS TTM',
         yaxis="y2"
     ))
 
@@ -310,16 +303,16 @@ def plotly_pe_ttm_avg_graph(stock_consolidate_df):
         y=stock_consolidate_df["PE_TTM"],
         mode='lines',
         line=dict(color='black'),
-        name='PE_TTM',
+        name='PE TTM',
     ))
 
     # Add PE_TTM_avg as a horizontal line
     fig.add_trace(go.Scatter(
         x=stock_consolidate_df.index,
-        y=[stock_consolidate_df["PE_TTM_avg"][0]] * len(stock_consolidate_df.index),
+        y=[stock_consolidate_df["PE_TTM_AVG"][0]] * len(stock_consolidate_df.index),
         mode='lines',
         line=dict(color='green', dash='dash'),
-        name='PE_TTM_avg',
+        name='Avg.PE TTM',
     ))
 
     # Update layout
