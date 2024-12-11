@@ -306,7 +306,7 @@ def plotly_pe_ttm_avg_graph(stock_consolidate_df):
     # Add PE_TTM_avg as a horizontal line
     fig.add_trace(go.Scatter(
         x=stock_consolidate_df.index,
-        y=[stock_consolidate_df["PE_TTM_AVG"][0]] * len(stock_consolidate_df.index),
+        y=[stock_consolidate_df["PE_TTM_avg"][0]] * len(stock_consolidate_df.index),
         mode='lines',
         line=dict(color='green', dash='dash'),
         name='Avg.PE TTM',
