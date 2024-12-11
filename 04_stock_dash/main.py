@@ -52,8 +52,8 @@ async def get_stock_graph(request: Request, symbol: str = Form(...)):
             "graph.html",
             {
                 "request": request
-                ,"plotly_price_EPS_graph_html": plotly_price_EPS_html
-                ,"plotly_pe_ttm_avg_graph_html": plotly_price_EPS_html
+                ,"plotly_price_EPS_html": plotly_price_EPS_html
+                ,"plotly_pe_ttm_avg_html": plotly_pe_ttm_avg_html
                 ,"symbol": symbol
 
                 },
@@ -61,7 +61,10 @@ async def get_stock_graph(request: Request, symbol: str = Form(...)):
     except Exception as e:
         return JSONResponse(status_code=400, content={"message": str(e)})
 
-
+    except ValueError as ve:
+        return templates.TemplateResponse(
+            "error.html", {"request": request, "error_message": str(ve)}
+        )
 
 def fetch_stock_data(symbol):
     """
@@ -211,6 +214,9 @@ def fetch_stock_data(symbol):
     stock_consolidate_df["relative_valuation_TTM_-"] = (stock_consolidate_df["PE_TTM_volatility_-"] * stock_consolidate_df["EPS_TTM"]).round(2) # 这个是relative valuation的价格下限
     stock_consolidate_df["relative_valuation_TTM_median"] = (np.median([stock_consolidate_df["relative_valuation_TTM_+"][0], stock_consolidate_df["relative_valuation_TTM_-"][0]])).round(2) #这个是根据最新TTM PE估值的价格中位数
 
+    if stock_consolidate_df.empty:
+        raise ValueError(f"No stock data available for symbol {symbol}.")
+    
     return stock_consolidate_df
 
 
@@ -219,6 +225,10 @@ def plotly_price_EPS_graph(stock_consolidate_df):
     """
     Generate a Plotly price EPS TTM graph from the stock DataFrame.
     """
+
+    if stock_consolidate_df.empty:
+        raise ValueError("DataFrame is empty, cannot generate graph.")
+
     # Create the figure
     fig = go.Figure()
 
@@ -281,7 +291,10 @@ def plotly_pe_ttm_avg_graph(stock_consolidate_df):
     Generate a PE TTM statics graph from the stock DataFrame.
     """
 
-        # Create the figure
+    if stock_consolidate_df.empty:
+        raise ValueError("DataFrame is empty, cannot generate graph.")
+    
+    # Create the figure
     fig = go.Figure()
 
     # Add PE_TTM on primary y-axis

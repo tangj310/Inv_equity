@@ -16,7 +16,7 @@
         <div class="graph-section">
             <h2>Price and EPS TTM</h2>
             <div class="graph-container">
-                {{ price_eps_graph_html | safe }}
+                {{ plotly_price_EPS_html | safe }}
             </div>
         </div>
         
@@ -24,7 +24,7 @@
         <div class="graph-section">
             <h2>PE TTM Stats</h2>
             <div class="graph-container">
-                {{ pe_ttm_graph_html | safe }}
+                {{ plotly_pe_ttm_avg_html | safe }}
             </div>
         </div>
 
