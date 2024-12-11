@@ -44,6 +44,12 @@ async def get_stock_graph(request: Request, symbol: str = Form(...)):
         # Fetch stock data
         stock_consolidate_df = fetch_stock_data(symbol)
 
+        # Create the data tables
+        pd_stock_table_html = stock_consolidate_df.head(10).to_html(
+            classes='table table-striped'
+            ,index=True
+            )
+
         # Create Plotly graph
         plotly_price_EPS_html = plotly_price_EPS_graph(stock_consolidate_df)
         plotly_pe_ttm_avg_html = plotly_pe_ttm_avg_graph(stock_consolidate_df)
@@ -54,6 +60,7 @@ async def get_stock_graph(request: Request, symbol: str = Form(...)):
                 "request": request
                 ,"plotly_price_EPS_html": plotly_price_EPS_html
                 ,"plotly_pe_ttm_avg_html": plotly_pe_ttm_avg_html
+                ,"pd_stock_table_html": pd_stock_table_html
                 ,"symbol": symbol
 
                 },
@@ -61,10 +68,10 @@ async def get_stock_graph(request: Request, symbol: str = Form(...)):
     except Exception as e:
         return JSONResponse(status_code=400, content={"message": str(e)})
 
-    except ValueError as ve:
-        return templates.TemplateResponse(
-            "error.html", {"request": request, "error_message": str(ve)}
-        )
+    # except ValueError as ve:
+    #     return templates.TemplateResponse(
+    #         "error.html", {"request": request, "error_message": str(ve)}
+    #     )
 
 def fetch_stock_data(symbol):
     """
@@ -96,7 +103,6 @@ def fetch_stock_data(symbol):
 
     for key, value in data.items():
         if key == 'Time Series (Daily)':
-
 
             selected_cols = [
                 '4. close'
@@ -215,8 +221,8 @@ def fetch_stock_data(symbol):
     stock_consolidate_df["relative_valuation_TTM_-"] = (stock_consolidate_df["PE_TTM_volatility_-"] * stock_consolidate_df["EPS_TTM"]).round(2) # 这个是relative valuation的价格下限
     stock_consolidate_df["relative_valuation_TTM_median"] = (np.median([stock_consolidate_df["relative_valuation_TTM_+"][0], stock_consolidate_df["relative_valuation_TTM_-"][0]])).round(2) #这个是根据最新TTM PE估值的价格中位数
 
-    if stock_consolidate_df.empty:
-        raise ValueError(f"No stock data available for symbol {symbol}.")
+    # if stock_consolidate_df.empty:
+    #     raise ValueError(f"No stock data available for symbol {symbol}.")
     
     return stock_consolidate_df
 
