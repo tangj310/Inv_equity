@@ -61,10 +61,7 @@ async def get_stock_graph(request: Request, symbol: str = Form(...)):
     except Exception as e:
         return JSONResponse(status_code=400, content={"message": str(e)})
 
-    # except ValueError as ve:
-    #     return templates.TemplateResponse(
-    #         "error.html", {"request": request, "error_message": str(ve)}
-    #     )
+
 
 def fetch_stock_data(symbol):
     """
