@@ -1,31 +1,49 @@
+/* General container styling */
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
-    font-family: Arial, sans-serif;
+    font-family: 'Arial', sans-serif;
+    color: #333;
+    background-color: #ffffff;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
 }
 
+/* Home page and graph page headings */
+h1, h2 {
+    text-align: center;
+    color: #007bff;
+    font-weight: bold;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h1 {
+    margin-bottom: 30px;
+    font-size: 2.5rem;
+}
+
+h2 {
+    margin-bottom: 20px;
+    font-size: 2rem;
+}
+
+/* Graph section */
 .graph-section {
     margin-bottom: 40px;
 }
 
+/* Graph container with a modern look */
 .graph-container {
     border: 1px solid #ddd;
     border-radius: 8px;
-    padding: 10px;
+    padding: 15px;
     background-color: #f9f9f9;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-h1 {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-h2 {
-    margin-bottom: 10px;
-}
-
-.back-button {
+/* Buttons with modern styling */
+button, .back-button {
     display: inline-block;
     margin-top: 20px;
     padding: 10px 15px;
@@ -33,8 +51,78 @@ h2 {
     background-color: #007bff;
     text-decoration: none;
     border-radius: 5px;
+    border: none;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
-.back-button:hover {
+button:hover, .back-button:hover {
     background-color: #0056b3;
+}
+
+/* Input fields */
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 1rem;
+}
+
+/* Footer section */
+footer {
+    text-align: center;
+    margin-top: 40px;
+    padding: 10px 0;
+    font-size: 0.9rem;
+    color: #666;
+    background-color: #f1f1f1;
+    border-top: 1px solid #ddd;
+}
+
+/* Adding hover effects */
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+    color: #0056b3;
+}
+
+/* Additional styling for homepage forms */
+form {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: left;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f7f9fc;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Make the overall design responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    form {
+        padding: 15px;
+    }
 }
