@@ -217,22 +217,9 @@ def _process_ticker(symbol: str, api_key: str, window_days: int = 90, PE_yr_rang
                 lambda x: float(x) if x not in [None, "None", "nan", "NaN"] else 0.0
             )
 
-    # ── EPS forecasts: Alpha Vantage EARNINGS_CALENDAR ────────────────────
+    # ── EPS forecasts + trend + growth: yfinance (requires >= 0.2.58) ──────
     next_qtr_EPS = 0.0
     next_yr_EPS = 0.0
-
-    cal_url = f"https://www.alphavantage.co/query?function=EARNINGS_CALENDAR&symbol={symbol}&horizon=12month&apikey={api_key}"
-    with requests.Session() as s:
-        decoded = s.get(cal_url).content.decode("utf-8")
-        rows = list(csv_module.reader(decoded.splitlines(), delimiter=","))
-        if len(rows) > 1:
-            cal_df = pd.DataFrame(columns=rows[0], data=rows[1:])
-            cal_df["estimate"] = pd.to_numeric(cal_df["estimate"], errors="coerce").fillna(0)
-            if not cal_df.empty:
-                next_qtr_EPS = float(cal_df["estimate"].iloc[0])
-            next_yr_EPS = float(cal_df["estimate"].head(4).sum())
-
-    # ── Growth / EPS trend via yfinance info ──────────────────────────────
     next_yr_days7ago_EPS = None
     next_yr_days30ago_EPS = None
     next_yr_days60ago_EPS = None
@@ -242,15 +229,47 @@ def _process_ticker(symbol: str, api_key: str, window_days: int = 90, PE_yr_rang
     curr_yr_growthrate_index = None
     next_yr_growthrate_index = None
 
+    yf_ticker = yf.Ticker(symbol)
+
     try:
-        yf_info = yf.Ticker(symbol).info
-        forward_eps = yf_info.get("forwardEps")
-        if forward_eps and next_yr_EPS == 0:
-            next_yr_EPS = float(forward_eps)
-        earnings_growth = yf_info.get("earningsGrowth")
-        if earnings_growth is not None:
-            curr_yr_growthrate_symbol = round(float(earnings_growth) * 100, 2)
-            next_yr_growthrate_symbol = round(float(earnings_growth) * 100, 2)
+        ee = yf_ticker.earnings_estimate
+        ee["period"] = ee.index
+        next_qtr_EPS = float(ee.loc[ee["period"] == "+1q", "avg"].values[0])
+        next_yr_EPS  = float(ee.loc[ee["period"] == "+1y", "avg"].values[0])
+    except Exception:
+        # Fallback: Alpha Vantage EARNINGS_CALENDAR
+        try:
+            cal_url = f"https://www.alphavantage.co/query?function=EARNINGS_CALENDAR&symbol={symbol}&horizon=12month&apikey={api_key}"
+            with requests.Session() as s:
+                decoded = s.get(cal_url).content.decode("utf-8")
+                cal_rows = list(csv_module.reader(decoded.splitlines(), delimiter=","))
+                if len(cal_rows) > 1:
+                    cal_df = pd.DataFrame(columns=cal_rows[0], data=cal_rows[1:])
+                    cal_df["estimate"] = pd.to_numeric(cal_df["estimate"], errors="coerce").fillna(0)
+                    if not cal_df.empty:
+                        next_qtr_EPS = float(cal_df["estimate"].iloc[0])
+                    next_yr_EPS = float(cal_df["estimate"].head(4).sum())
+        except Exception:
+            pass
+
+    try:
+        et = yf_ticker.eps_trend
+        et["period"] = et.index
+        row_1y = et.loc[et["period"] == "+1y"]
+        next_yr_days7ago_EPS  = float(row_1y["7daysAgo"].values[0])
+        next_yr_days30ago_EPS = float(row_1y["30daysAgo"].values[0])
+        next_yr_days60ago_EPS = float(row_1y["60daysAgo"].values[0])
+        next_yr_days90ago_EPS = float(row_1y["90daysAgo"].values[0])
+    except Exception:
+        pass
+
+    try:
+        ge = yf_ticker.growth_estimates
+        ge["period"] = ge.index
+        curr_yr_growthrate_symbol = float(ge.loc[ge["period"] == "0y",  "stockTrend"].values[0]) * 100
+        next_yr_growthrate_symbol = float(ge.loc[ge["period"] == "+1y", "stockTrend"].values[0]) * 100
+        curr_yr_growthrate_index  = float(ge.loc[ge["period"] == "0y",  "indexTrend"].values[0]) * 100
+        next_yr_growthrate_index  = float(ge.loc[ge["period"] == "+1y", "indexTrend"].values[0]) * 100
     except Exception:
         pass
 

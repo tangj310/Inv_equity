@@ -2,9 +2,9 @@ fastapi
 uvicorn[standard]
 jinja2
 python-dotenv
-yfinance
-pandas
-numpy
+yfinance==0.2.58
+pandas==2.2.2
+numpy<2
 scikit-learn
 requests
 openpyxl

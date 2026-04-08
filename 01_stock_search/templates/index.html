@@ -91,6 +91,12 @@
         </svg>
         Single Stock Status
     </a>
+    <a class="nav-link" href="/stock-return-comparison">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M0 0h1v15h15v1H0zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5z"/>
+        </svg>
+        Return Comparison
+    </a>
 
     <div class="nav-section">More</div>
     <a class="nav-link" href="/">
@@ -119,8 +125,11 @@
                 <label for="peYrRange">PE history (yrs)</label>
                 <input type="number" class="form-control" id="peYrRange" value="6" min="2" max="20">
             </div>
-            <div class="col-md-1">
-                <button class="btn btn-primary btn-block" onclick="runAnalysis()">Analyze</button>
+            <div class="col-md-2">
+                <div class="d-flex" style="gap:6px;">
+                    <button class="btn btn-primary flex-grow-1" onclick="runAnalysis()">Analyze</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="clearAll()">Clear</button>
+                </div>
             </div>
         </div>
     </div>
@@ -385,6 +394,21 @@
         const box = document.getElementById("errorBox");
         box.textContent = msg;
         box.classList.remove("d-none");
+    }
+
+    function clearAll() {
+        document.getElementById("tickerInput").value  = "";
+        document.getElementById("windowDays").value   = "90";
+        document.getElementById("peYrRange").value    = "6";
+        document.getElementById("progressSection").classList.add("d-none");
+        document.getElementById("resultsSection").classList.add("d-none");
+        document.getElementById("errorBox").classList.add("d-none");
+        document.getElementById("tableHead").innerHTML = "";
+        document.getElementById("tableBody").innerHTML = "";
+        document.getElementById("tickerChips").innerHTML = "";
+        document.getElementById("progressBar").style.width = "0%";
+        chipMap = {};
+        headerBuilt = false;
     }
 
     document.addEventListener("DOMContentLoaded", () => {

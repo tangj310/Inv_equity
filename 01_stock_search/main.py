@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 
 from stock_analyzer import analyze_stocks, analyze_single_stock_detail, process_ticker_to_row
+from stock_comparison import process_ticker_return
 
 load_dotenv()
 
@@ -119,6 +120,51 @@ async def single_stock_data(body: SingleStockRequest):
         return {"ticker": body.ticker, "columns": [], "rows": [], "error": "alpha_vantage_api_key not set"}
     ticker = body.ticker.strip().upper()
     return analyze_single_stock_detail(ticker, API_KEY, body.window_days, body.PE_yr_range)
+
+
+class ReturnComparisonRequest(BaseModel):
+    tickers: list[str]
+    years: float = 5.0
+
+
+@app.get("/stock-return-comparison", response_class=HTMLResponse)
+async def stock_return_comparison_page(request: Request):
+    return templates.TemplateResponse("stock_comparison.html", {"request": request})
+
+
+@app.post("/stock-return-stream")
+async def stock_return_stream(body: ReturnComparisonRequest):
+    """SSE: streams one result per ticker, then 'done'."""
+    if not API_KEY:
+        async def _err():
+            yield f"data: {json.dumps({'type': 'error_fatal', 'message': 'alpha_vantage_api_key not set'})}\n\n"
+        return StreamingResponse(_err(), media_type="text/event-stream")
+
+    tickers = [t.strip().upper() for t in body.tickers if t.strip()]
+
+    async def event_generator():
+        total = len(tickers)
+        loop  = asyncio.get_event_loop()
+        results = []
+
+        for j, symbol in enumerate(tickers):
+            yield f"data: {json.dumps({'type': 'progress', 'ticker': symbol, 'index': j + 1, 'total': total})}\n\n"
+            try:
+                result = await loop.run_in_executor(
+                    None, process_ticker_return, symbol, body.years, API_KEY
+                )
+                results.append(result)
+                yield f"data: {json.dumps({'type': 'result', 'ticker': symbol, 'index': j + 1, 'total': total, 'data': result})}\n\n"
+            except Exception as e:
+                yield f"data: {json.dumps({'type': 'error', 'ticker': symbol, 'index': j + 1, 'total': total, 'message': str(e)})}\n\n"
+
+        yield f"data: {json.dumps({'type': 'done'})}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 if __name__ == "__main__":

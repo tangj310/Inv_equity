@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Return Comparison</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        body { background: #f8f9fa; }
+
+        /* ── Sidebar ── */
+        #sidebar {
+            width: 220px; min-height: 100vh;
+            background: #1e2a38; color: #c8d6e5;
+            position: fixed; top: 0; left: 0;
+            display: flex; flex-direction: column;
+            padding-top: 1rem;
+        }
+        #sidebar .sidebar-brand {
+            font-size: 1.1rem; font-weight: 700; color: #fff;
+            padding: 0.75rem 1.25rem 1.25rem;
+            border-bottom: 1px solid #2e3f52; letter-spacing: 0.03em;
+        }
+        #sidebar .nav-section {
+            font-size: 0.7rem; text-transform: uppercase;
+            letter-spacing: 0.1em; color: #6b8099;
+            padding: 1.25rem 1.25rem 0.4rem;
+        }
+        #sidebar .nav-link {
+            color: #c8d6e5; padding: 0.55rem 1.25rem;
+            display: flex; align-items: center; gap: 0.6rem;
+            font-size: 0.9rem; transition: background 0.15s;
+        }
+        #sidebar .nav-link:hover { background: #2e3f52; color: #fff; text-decoration: none; }
+        #sidebar .nav-link.active { background: #2e3f52; color: #fff; }
+        #sidebar .nav-link svg { flex-shrink: 0; }
+
+        /* ── Main ── */
+        #main-content { margin-left: 220px; padding: 2rem 1.5rem; }
+        h1 { font-size: 1.6rem; }
+
+        /* ── Progress chips ── */
+        .chip {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 2px 10px; border-radius: 20px; font-size: 0.78rem;
+            font-weight: 600; border: 1px solid transparent;
+        }
+        .chip-pending  { background: #e9ecef; color: #495057; border-color: #ced4da; }
+        .chip-fetching { background: #cce5ff; color: #004085; border-color: #b8daff; }
+        .chip-done     { background: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .chip-error    { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+
+        /* ── Rangeslider: hide mini chart preview, keep handle ── */
+        .rangeslider-rangeplot { display: none !important; }
+        /* Unselected (dimmed) side masks → white */
+        .rangeslider-mask-min,
+        .rangeslider-mask-max { fill: #ffffff !important; fill-opacity: 1 !important; }
+        /* Selected area slidebox → dark grey */
+        .rangeslider-slidebox { fill: #374151 !important; fill-opacity: 0.85 !important; }
+
+        /* ── Pie tooltip ── */
+        #pieTip {
+            position: fixed;
+            display: none;
+            background: #ffffff;
+            border: none;
+            border-radius: 14px;
+            box-shadow: 0 8px 32px rgba(30,42,56,0.18), 0 1.5px 6px rgba(30,42,56,0.08);
+            padding: 10px 10px 6px;
+            z-index: 9999;
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+        }
+
+        /* ── Return table ── */
+        .return-positive { color: #28a745; font-weight: 600; }
+        .return-negative { color: #dc3545; font-weight: 600; }
+        th { white-space: nowrap; font-size: 0.82rem; }
+        td { font-size: 0.82rem; }
+    </style>
+</head>
+<body>
+
+<!-- ── Sidebar ────────────────────────────────────────────────── -->
+<nav id="sidebar">
+    <div class="sidebar-brand">📈 Inv Dashboard</div>
+
+    <div class="nav-section">Analysis</div>
+    <a class="nav-link" href="/stock-screening">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/>
+        </svg>
+        Stock Screening
+    </a>
+    <a class="nav-link" href="/single-stock">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07z"/>
+        </svg>
+        Single Stock Status
+    </a>
+    <a class="nav-link active" href="/stock-return-comparison">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M0 0h1v15h15v1H0zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5z"/>
+        </svg>
+        Return Comparison
+    </a>
+
+    <div class="nav-section">More</div>
+    <a class="nav-link" href="/">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5v-5h3v5H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L8.354 1.146z"/>
+        </svg>
+        Home
+    </a>
+</nav>
+
+<!-- ── Main ──────────────────────────────────────────────────── -->
+<div id="main-content">
+<div class="container-fluid">
+    <h1 class="mb-3">Stock Return Comparison</h1>
+
+    <!-- Input form -->
+    <div class="card p-3 mb-4">
+        <div class="form-row align-items-end">
+            <div class="col-md-7">
+                <label for="tickerInput"><strong>Ticker symbols</strong>
+                    <small class="text-muted">(comma-separated, e.g. SPY, MO, MSFT)</small>
+                </label>
+                <input type="text" class="form-control" id="tickerInput" placeholder="SPY, MO, MSFT">
+            </div>
+            <div class="col-md-2">
+                <label for="yearsInput">Years</label>
+                <input type="number" class="form-control" id="yearsInput" value="5" min="1" max="25" step="1">
+            </div>
+            <div class="col-md-2">
+                <label for="initialInvestment">Initial Investment ($)</label>
+                <input type="number" class="form-control" id="initialInvestment" value="10000" min="1" step="1000">
+            </div>
+            <div class="col-md-2">
+                <div class="d-flex" style="gap:6px;">
+                    <button class="btn btn-primary flex-grow-1" onclick="runComparison()">Compare</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="clearAll()">Clear</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress panel -->
+    <div id="progressSection" class="d-none mb-4">
+        <div class="card p-3">
+            <div class="d-flex align-items-center mb-2">
+                <div class="spinner-border spinner-border-sm text-primary mr-2" id="progressSpinner" role="status"></div>
+                <strong id="progressLabel">Fetching...</strong>
+                <span class="ml-auto text-muted small" id="progressCount"></span>
+            </div>
+            <div class="progress mb-3" style="height:8px;">
+                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                     role="progressbar" style="width:0%"></div>
+            </div>
+            <div id="tickerChips" class="d-flex flex-wrap" style="gap:6px;"></div>
+        </div>
+    </div>
+
+    <div id="errorBox" class="alert alert-danger d-none"></div>
+
+    <!-- Chart -->
+    <div id="chartSection" class="d-none">
+        <div class="card p-3 mb-4">
+            <div id="returnChart" style="width:100%; height:500px;"></div>
+        </div>
+
+        <!-- Return table -->
+        <div class="card p-3">
+            <h6 class="mb-3">Return Summary <span id="tablePeriodLabel" class="text-muted small"></span></h6>
+            <div style="overflow-x:auto;">
+                <table class="table table-bordered table-sm table-hover bg-white mb-0">
+                    <thead class="thead-dark" id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div></div>
+
+<script>
+    // ── State ─────────────────────────────────────────────────────────────
+    let chipMap   = {};
+    let seriesData = {};  // ticker -> {dates, values, ...}
+
+    const SESSION_KEY = "returnComparison_state";
+
+    function saveSession() {
+        try {
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+                tickers: document.getElementById("tickerInput").value,
+                years:   document.getElementById("yearsInput").value,
+                initialInv: document.getElementById("initialInvestment").value,
+                seriesData,
+            }));
+        } catch(e) { /* storage full or unavailable */ }
+    }
+
+    function restoreSession() {
+        try {
+            const raw = sessionStorage.getItem(SESSION_KEY);
+            if (!raw) return;
+            const s = JSON.parse(raw);
+            document.getElementById("tickerInput").value       = s.tickers   || "";
+            document.getElementById("yearsInput").value        = s.years     || "5";
+            document.getElementById("initialInvestment").value = s.initialInv || "10000";
+            if (s.seriesData && Object.keys(s.seriesData).length) {
+                seriesData = s.seriesData;
+                Object.keys(seriesData).forEach(t => getColor(t));
+                const years = parseFloat(s.years) || 5;
+                // Defer rendering so the browser finishes layout (sidebar margin, padding)
+                // before Plotly measures the container width
+                setTimeout(() => {
+                    renderChart(years);
+                    renderTable(years);
+                }, 50);
+            }
+        } catch(e) { /* corrupt storage */ }
+    }
+
+    // Keep chart full-width if the window is resized
+    window.addEventListener("resize", () => {
+        const el = document.getElementById("returnChart");
+        if (el && el.data) Plotly.Plots.resize(el);
+    });
+
+    // ── Progress helpers ──────────────────────────────────────────────────
+    function initProgress(tickers) {
+        chipMap    = {};
+        seriesData = {};
+        document.getElementById("tickerChips").innerHTML = "";
+        document.getElementById("progressBar").style.width = "0%";
+        document.getElementById("progressSection").classList.remove("d-none");
+        document.getElementById("progressSpinner").style.display = "";
+        document.getElementById("progressBar").classList.add("progress-bar-animated");
+        document.getElementById("chartSection").classList.add("d-none");
+        document.getElementById("errorBox").classList.add("d-none");
+        document.getElementById("tableHead").innerHTML = "";
+        document.getElementById("tableBody").innerHTML = "";
+        document.getElementById("returnChart").innerHTML = "";
+
+        tickers.forEach(t => {
+            const chip = document.createElement("span");
+            chip.className = "chip chip-pending";
+            chip.id = `chip-${t}`;
+            chip.textContent = t;
+            document.getElementById("tickerChips").appendChild(chip);
+            chipMap[t] = chip;
+        });
+    }
+
+    function setChip(ticker, state) {
+        const chip = chipMap[ticker];
+        if (!chip) return;
+        chip.className = `chip chip-${state}`;
+        const icon = state === "fetching" ? " ⏳" : state === "done" ? " ✓" : " ✗";
+        chip.textContent = ticker + icon;
+    }
+
+    function updateProgressBar(index, total) {
+        const pct = Math.round((index / total) * 100);
+        document.getElementById("progressBar").style.width = pct + "%";
+        document.getElementById("progressCount").textContent = `${index} / ${total}`;
+    }
+
+    function finalizeProgress() {
+        document.getElementById("progressSpinner").style.display = "none";
+        document.getElementById("progressLabel").textContent = "Done";
+        document.getElementById("progressBar").classList.remove("progress-bar-animated");
+        document.getElementById("progressBar").style.width = "100%";
+    }
+
+    // Assign a consistent color per ticker; SPY always gets dark grey
+    const PALETTE = [
+        "#4e79a7","#f28e2b","#e15759","#76b7b2","#59a14f",
+        "#edc948","#b07aa1","#ff9da7","#9c755f","#bab0ac",
+    ];
+    const SPY_COLOR = "#6b7280";
+    const colorCache = {};
+    let paletteIdx = 0;
+    function getColor(ticker) {
+        if (ticker === "SPY") return SPY_COLOR;
+        if (!colorCache[ticker]) {
+            colorCache[ticker] = PALETTE[paletteIdx % PALETTE.length];
+            paletteIdx++;
+        }
+        return colorCache[ticker];
+    }
+
+    // ── Chart rendering ───────────────────────────────────────────────────
+    function renderChart(years) {
+        const entries = Object.values(seriesData);
+        // SPY first so it renders behind other lines
+        entries.sort((a, b) => (a.ticker === "SPY" ? -1 : b.ticker === "SPY" ? 1 : 0));
+
+        const traces = entries.map(d => {
+            const isSPY = d.ticker === "SPY";
+            const label = isSPY ? `SPY (benchmark)` : d.ticker;
+            return {
+                x: d.dates,
+                y: d.values,
+                type: "scatter",
+                mode: "lines",
+                name: label,
+                line: {
+                    color: getColor(d.ticker),
+                    width: isSPY ? 2 : 2,
+                    dash:  "solid",
+                    shape: "spline",
+                    smoothing: 0.3,
+                },
+                opacity: isSPY ? 0.55 : 1,
+                hovertemplate: `<b>${d.ticker}</b>  %{y:.3f}x<extra></extra>`,
+            };
+        });
+
+        // Subtle horizontal reference band at y=1 (break-even)
+        const allDates = entries.flatMap(d => d.dates);
+        const minDate  = allDates.reduce((a, b) => a < b ? a : b, allDates[0]);
+        const maxDate  = allDates.reduce((a, b) => a > b ? a : b, allDates[0]);
+
+        const layout = {
+            title: {
+                text: `<b>Normalised Total Return</b>  ·  ${years}-Year Window`,
+                font: { size: 16, color: "#1e2a38", family: "system-ui, sans-serif" },
+                x: 0.0,
+                xanchor: "left",
+                pad: { l: 4 },
+            },
+            xaxis: {
+                title: { text: "" },
+                rangeslider: {
+                    visible: true,
+                    thickness: 0.05,
+                    bgcolor: "#ffffff",
+                    bordercolor: "#dee2e6",
+                    borderwidth: 1,
+                },
+                type: "date",
+                showgrid: false,
+                zeroline: false,
+                linecolor: "#dee2e6",
+                tickfont: { size: 11, color: "#6c757d" },
+                tickformat: "%b %Y",
+            },
+            yaxis: {
+                title: { text: "Return (×)", standoff: 8, font: { size: 12, color: "#6c757d" } },
+                tickformat: ".2f",
+                showgrid: false,
+                zeroline: false,
+                linecolor: "#dee2e6",
+                tickfont: { size: 11, color: "#6c757d" },
+            },
+            // Break-even reference line at y=1
+            shapes: [{
+                type: "line",
+                x0: minDate, x1: maxDate,
+                y0: 1, y1: 1,
+                line: { color: "#adb5bd", width: 1.5, dash: "dot" },
+                layer: "below",
+            }],
+            annotations: [{
+                x: minDate, y: 1,
+                xanchor: "left", yanchor: "bottom",
+                text: "break-even",
+                showarrow: false,
+                font: { size: 10, color: "#adb5bd" },
+            }],
+            legend: {
+                orientation: "v",
+                x: 1.02,
+                y: 1,
+                xanchor: "left",
+                yanchor: "top",
+                bgcolor: "rgba(255,255,255,0.92)",
+                bordercolor: "#dee2e6",
+                borderwidth: 1,
+                font: { size: 12, color: "#1e2a38", family: "system-ui, sans-serif" },
+                tracegroupgap: 6,
+            },
+            hovermode: "x unified",
+            hoverlabel: {
+                bgcolor: "#1e2a38",
+                bordercolor: "#1e2a38",
+                font: { color: "#ffffff", size: 12 },
+            },
+            plot_bgcolor: "#ffffff",
+            paper_bgcolor: "#ffffff",
+            margin: { t: 55, b: 30, l: 60, r: 160 },
+            font: { family: "system-ui, -apple-system, sans-serif" },
+        };
+
+        const config = {
+            responsive: true,
+            displayModeBar: true,
+            modeBarButtonsToRemove: ["select2d", "lasso2d", "autoScale2d"],
+            displaylogo: false,
+            toImageButtonOptions: { format: "png", scale: 2 },
+        };
+
+        document.getElementById("chartSection").classList.remove("d-none");
+        Plotly.newPlot("returnChart", traces, layout, config);
+    }
+
+    // ── Return table ──────────────────────────────────────────────────────
+    function renderTable(years) {
+        const rows = Object.values(seriesData);
+        if (!rows.length) return;
+
+        const initialInv = parseFloat(document.getElementById("initialInvestment").value) || 10000;
+
+        // Sort: SPY first as benchmark, rest by total return desc
+        rows.sort((a, b) => {
+            if (a.ticker === "SPY") return -1;
+            if (b.ticker === "SPY") return 1;
+            return b.return_multiplier - a.return_multiplier;
+        });
+
+        const head = document.getElementById("tableHead");
+        const body = document.getElementById("tableBody");
+        head.innerHTML = "";
+        body.innerHTML = "";
+
+        const cols = [
+            "Ticker",
+            "Start Price", "End Price",
+            "Total Dividends ($/share)",
+            "Price Return %",
+            "Total Return % (incl. Div)",
+            "Return Multiplier",
+            `Exit Value ($${initialInv.toLocaleString()} invested)`,
+            "Principal (% of Exit)",
+            "Capital Gains (% of Exit)",
+            "Dividends (% of Exit)",
+        ];
+
+        const htr = document.createElement("tr");
+        cols.forEach(c => {
+            const th = document.createElement("th");
+            th.textContent = c;
+            if (c === "Ticker") th.style.minWidth = "70px";
+            htr.appendChild(th);
+        });
+        head.appendChild(htr);
+
+        rows.forEach(d => {
+            const tr = document.createElement("tr");
+            const mult      = d.return_multiplier;
+            const cls       = mult >= 1 ? "return-positive" : "return-negative";
+            const pricecls  = d.price_return_multiplier >= 1 ? "return-positive" : "return-negative";
+            const isSPY     = d.ticker === "SPY";
+
+            // Investment breakdown
+            const exitValue      = initialInv * mult;
+            const capitalGains   = Math.max(0, initialInv * (d.price_return_multiplier - 1));
+            const dividendIncome = initialInv * (d.total_dividends / d.start_price);
+
+            // Share % of exit value
+            const principalPct  = (initialInv    / exitValue * 100).toFixed(1);
+            const gainsPct      = (capitalGains  / exitValue * 100).toFixed(1);
+            const divPct        = (dividendIncome / exitValue * 100).toFixed(1);
+
+            const fmt = v => `$${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const fmtPct = (val, pct) => `${fmt(val)}  (${pct}%)`;
+
+            const cells = [
+                { val: d.ticker,                                                  cls: null, pie: null },
+                { val: `$${d.start_price.toFixed(2)}`,                           cls: null, pie: null },
+                { val: `$${d.end_price.toFixed(2)}`,                             cls: null, pie: null },
+                { val: `$${d.total_dividends.toFixed(2)}`,                       cls: null, pie: null },
+                { val: `${((d.price_return_multiplier - 1) * 100).toFixed(1)}%`, cls: pricecls, pie: null },
+                { val: `${((mult - 1) * 100).toFixed(1)}%`,                      cls: cls,  pie: null },
+                { val: `${mult.toFixed(3)}x`,                                     cls: cls,  pie: null },
+                {
+                    val: fmt(exitValue),
+                    cls: null,
+                    pie: { ticker: d.ticker, principal: initialInv, gains: capitalGains, divs: dividendIncome },
+                    title: "Hover to see breakdown",
+                },
+                { val: fmtPct(initialInv,     principalPct), cls: null, pie: null },
+                { val: fmtPct(capitalGains,   gainsPct),     cls: null, pie: null },
+                { val: fmtPct(dividendIncome, divPct),       cls: null, pie: null },
+            ];
+
+            cells.forEach(({ val, cls: cellCls, pie, title }) => {
+                const td = document.createElement("td");
+                td.textContent = val;
+                if (cellCls && !isSPY) td.className = cellCls;
+                if (isSPY) td.style.color = SPY_COLOR;
+                if (pie) {
+                    td.style.cursor = "pointer";
+                    td.style.textDecoration = "underline dotted #adb5bd";
+                    if (title) td.setAttribute("data-bs-toggle", "tooltip");
+                    td.addEventListener("mouseenter", e => showPieTip(e, pie));
+                    td.addEventListener("mousemove",  e => movePieTip(e));
+                    td.addEventListener("mouseleave", hidePieTip);
+                }
+                tr.appendChild(td);
+            });
+
+            if (isSPY) {
+                tr.style.background = "#f5f5f5";
+                tr.title = "Benchmark";
+            }
+            body.appendChild(tr);
+        });
+
+        document.getElementById("tablePeriodLabel").textContent =
+            `(${years}-year window  ·  initial investment $${initialInv.toLocaleString()}  ·  dividends included)`;
+    }
+
+    // ── Main ──────────────────────────────────────────────────────────────
+    async function runComparison() {
+        const raw    = document.getElementById("tickerInput").value;
+        const tickers = raw.split(",").map(t => t.trim().toUpperCase()).filter(t => t);
+        const years   = parseFloat(document.getElementById("yearsInput").value) || 5;
+        paletteIdx = 0;  // reset color palette on each new run
+        Object.keys(colorCache).forEach(k => { if (k !== "SPY") delete colorCache[k]; });
+
+        if (!tickers.length) { alert("Please enter at least one ticker."); return; }
+
+        initProgress(tickers);
+
+        try {
+            const resp = await fetch("/stock-return-stream", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tickers, years }),
+            });
+            if (!resp.ok) throw new Error(`Server error: ${resp.status}`);
+
+            const reader  = resp.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer    = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+
+                const parts = buffer.split("\n\n");
+                buffer = parts.pop();
+
+                for (const part of parts) {
+                    const line = part.trim();
+                    if (!line.startsWith("data: ")) continue;
+                    let event;
+                    try { event = JSON.parse(line.slice(6)); } catch { continue; }
+
+                    if (event.type === "progress") {
+                        document.getElementById("progressLabel").textContent = `Fetching ${event.ticker}…`;
+                        setChip(event.ticker, "fetching");
+
+                    } else if (event.type === "result") {
+                        setChip(event.ticker, "done");
+                        updateProgressBar(event.index, event.total);
+                        seriesData[event.ticker] = event.data;
+                        // Re-render chart incrementally as each ticker arrives
+                        renderChart(years);
+
+                    } else if (event.type === "error") {
+                        setChip(event.ticker, "error");
+                        updateProgressBar(event.index, event.total);
+                        showError(`${event.ticker}: ${event.message}`);
+
+                    } else if (event.type === "done") {
+                        finalizeProgress();
+                        renderChart(years);   // final render with all series
+                        renderTable(years);
+                        saveSession();
+
+                    } else if (event.type === "error_fatal") {
+                        showError(event.message);
+                        finalizeProgress();
+                    }
+                }
+            }
+        } catch (err) {
+            finalizeProgress();
+            showError(err.message);
+        }
+    }
+
+    function showError(msg) {
+        const box = document.getElementById("errorBox");
+        box.textContent = msg;
+        box.classList.remove("d-none");
+    }
+
+    function clearAll() {
+        document.getElementById("tickerInput").value        = "";
+        document.getElementById("yearsInput").value         = "5";
+        document.getElementById("initialInvestment").value  = "10000";
+        document.getElementById("progressSection").classList.add("d-none");
+        document.getElementById("chartSection").classList.add("d-none");
+        document.getElementById("errorBox").classList.add("d-none");
+        document.getElementById("tickerChips").innerHTML    = "";
+        document.getElementById("tableHead").innerHTML      = "";
+        document.getElementById("tableBody").innerHTML      = "";
+        document.getElementById("tablePeriodLabel").textContent = "";
+        document.getElementById("progressBar").style.width = "0%";
+        seriesData = {};
+        chipMap    = {};
+        paletteIdx = 0;
+        Object.keys(colorCache).forEach(k => { if (k !== "SPY") delete colorCache[k]; });
+        sessionStorage.removeItem(SESSION_KEY);
+        Plotly.purge("returnChart");
+    }
+
+    // ── Pie tooltip ──────────────────────────────────────────────────────
+    // Principal → steel blue, Capital Gains → emerald green, Dividends → peach orange
+    const PIE_COLORS = ["#4e79a7", "#2ecc71", "#ffaa5e"];
+
+    function showPieTip(e, pie) {
+        const tip = document.getElementById("pieTip");
+        tip.style.display = "block";
+        movePieTip(e);
+
+        const total  = pie.principal + pie.gains + pie.divs;
+        const labels = ["Principal", "Capital Gains", "Dividends"];
+        const values = [pie.principal, pie.gains, pie.divs];
+
+        Plotly.newPlot("pieTipChart", [{
+            type: "pie",
+            labels,
+            values,
+            marker: {
+                colors: PIE_COLORS,
+                line: { color: "#ffffff", width: 2 },
+            },
+            textinfo: "percent",
+            textposition: "inside",
+            textfont: { size: 12, color: "#ffffff", family: "system-ui, sans-serif" },
+            hovertemplate: "<b>%{label}</b><br>$%{value:,.0f}  (%{percent})<extra></extra>",
+            hole: 0.52,
+            rotation: -90,
+            direction: "clockwise",
+            sort: false,
+        }], {
+            title: {
+                text: `<b style="font-size:13px">${pie.ticker}</b><br><span style="font-size:10px;color:#6c757d">Exit breakdown</span>`,
+                font: { size: 13, color: "#1e2a38", family: "system-ui, sans-serif" },
+                x: 0.5,
+                y: 0.97,
+            },
+            annotations: [{
+                text: `<b>$${Math.round(total).toLocaleString()}</b>`,
+                x: 0.5, y: 0.5,
+                xanchor: "center", yanchor: "middle",
+                showarrow: false,
+                font: { size: 12, color: "#1e2a38", family: "system-ui, sans-serif" },
+            }],
+            showlegend: true,
+            legend: {
+                orientation: "v",
+                x: 1.02, y: 0.5,
+                xanchor: "left", yanchor: "middle",
+                font: { size: 10, color: "#495057", family: "system-ui, sans-serif" },
+                itemsizing: "constant",
+                tracegroupgap: 4,
+            },
+            margin: { t: 40, b: 10, l: 10, r: 80 },
+            width: 270, height: 210,
+            paper_bgcolor: "rgba(0,0,0,0)",
+            plot_bgcolor:  "rgba(0,0,0,0)",
+            font: { family: "system-ui, -apple-system, sans-serif" },
+        }, { displayModeBar: false });
+    }
+
+    function movePieTip(e) {
+        const tip = document.getElementById("pieTip");
+        const vw = window.innerWidth, vh = window.innerHeight;
+        let x = e.clientX + 14, y = e.clientY - 110;
+        if (x + 220 > vw) x = e.clientX - 230;
+        if (y < 0) y = e.clientY + 14;
+        tip.style.left = x + "px";
+        tip.style.top  = y + "px";
+    }
+
+    function hidePieTip() {
+        document.getElementById("pieTip").style.display = "none";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("tickerInput").addEventListener("keydown", e => {
+            if (e.key === "Enter") runComparison();
+        });
+        restoreSession();
+    });
+</script>
+
+<!-- Pie tooltip container -->
+<div id="pieTip"><div id="pieTipChart"></div></div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</body>
+</html>
