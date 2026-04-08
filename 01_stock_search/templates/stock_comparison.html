@@ -73,6 +73,15 @@
             backdrop-filter: blur(4px);
         }
 
+        /* ── Param card ── */
+        .param-card { border-top: 3px solid #4e79a7 !important; }
+        .param-label {
+            font-size: 0.7rem; font-weight: 700; color: #6c757d;
+            text-transform: uppercase; letter-spacing: 0.07em;
+            margin-bottom: 4px; display: block;
+        }
+        .input-group-text { font-size: 0.8rem; color: #6c757d; background: #f8f9fa; }
+
         /* ── Return table ── */
         .return-positive { color: #28a745; font-weight: 600; }
         .return-negative { color: #dc3545; font-weight: 600; }
@@ -121,26 +130,34 @@
     <h1 class="mb-3">Stock Return Comparison</h1>
 
     <!-- Input form -->
-    <div class="card p-3 mb-4">
-        <div class="form-row align-items-end">
-            <div class="col-md-7">
-                <label for="tickerInput"><strong>Ticker symbols</strong>
-                    <small class="text-muted">(comma-separated, e.g. SPY, MO, MSFT)</small>
-                </label>
-                <input type="text" class="form-control" id="tickerInput" placeholder="SPY, MO, MSFT">
-            </div>
-            <div class="col-md-2">
-                <label for="yearsInput">Years</label>
-                <input type="number" class="form-control" id="yearsInput" value="5" min="1" max="25" step="1">
-            </div>
-            <div class="col-md-2">
-                <label for="initialInvestment">Initial Investment ($)</label>
-                <input type="number" class="form-control" id="initialInvestment" value="10000" min="1" step="1000">
-            </div>
-            <div class="col-md-2">
-                <div class="d-flex" style="gap:6px;">
-                    <button class="btn btn-primary flex-grow-1" onclick="runComparison()">Compare</button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="clearAll()">Clear</button>
+    <div class="card param-card mb-4">
+        <div class="card-body py-3">
+            <div class="form-row align-items-end">
+                <div class="col-md-5">
+                    <label class="param-label" for="tickerInput">Ticker Symbols</label>
+                    <input type="text" class="form-control" id="tickerInput"
+                           placeholder="e.g. SPY, MO, MSFT  (comma-separated)">
+                </div>
+                <div class="col-md-2">
+                    <label class="param-label" for="yearsInput">Time Window</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="yearsInput" value="5" min="1" max="25" step="1">
+                        <div class="input-group-append"><span class="input-group-text">yrs</span></div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="param-label" for="initialInvestment">Initial Investment</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                        <input type="number" class="form-control" id="initialInvestment" value="10000" min="1" step="1000">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="param-label">&nbsp;</label>
+                    <div class="d-flex" style="gap:6px;">
+                        <button class="btn btn-primary flex-grow-1" onclick="runComparison()">Compare</button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="clearAll()">Clear</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -642,12 +659,6 @@
             direction: "clockwise",
             sort: false,
         }], {
-            title: {
-                text: `<b style="font-size:13px">${pie.ticker}</b><br><span style="font-size:10px;color:#6c757d">Exit breakdown</span>`,
-                font: { size: 13, color: "#1e2a38", family: "system-ui, sans-serif" },
-                x: 0.5,
-                y: 0.97,
-            },
             annotations: [{
                 text: `<b>$${Math.round(total).toLocaleString()}</b>`,
                 x: 0.5, y: 0.5,
@@ -664,8 +675,8 @@
                 itemsizing: "constant",
                 tracegroupgap: 4,
             },
-            margin: { t: 40, b: 10, l: 10, r: 80 },
-            width: 270, height: 210,
+            margin: { t: 10, b: 10, l: 10, r: 80 },
+            width: 270, height: 190,
             paper_bgcolor: "rgba(0,0,0,0)",
             plot_bgcolor:  "rgba(0,0,0,0)",
             font: { family: "system-ui, -apple-system, sans-serif" },

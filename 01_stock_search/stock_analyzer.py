@@ -21,6 +21,10 @@ DETAIL_COLS = [
     "EPS_TTM",
     "EPS_nextQtr_TTM",
     "EPS_nextYr",
+    "next_yr_days7ago_EPS",
+    "next_yr_days30ago_EPS",
+    "next_yr_days60ago_EPS",
+    "next_yr_days90ago_EPS",
     "PE_TTM",
     "PE_TTM_avg",
     "PE_TTM_volatility_+",
@@ -233,9 +237,8 @@ def _process_ticker(symbol: str, api_key: str, window_days: int = 90, PE_yr_rang
 
     try:
         ee = yf_ticker.earnings_estimate
-        ee["period"] = ee.index
-        next_qtr_EPS = float(ee.loc[ee["period"] == "+1q", "avg"].values[0])
-        next_yr_EPS  = float(ee.loc[ee["period"] == "+1y", "avg"].values[0])
+        next_qtr_EPS = float(ee.loc["+1q", "avg"])
+        next_yr_EPS  = float(ee.loc["+1y", "avg"])
     except Exception:
         # Fallback: Alpha Vantage EARNINGS_CALENDAR
         try:
@@ -254,22 +257,20 @@ def _process_ticker(symbol: str, api_key: str, window_days: int = 90, PE_yr_rang
 
     try:
         et = yf_ticker.eps_trend
-        et["period"] = et.index
-        row_1y = et.loc[et["period"] == "+1y"]
-        next_yr_days7ago_EPS  = float(row_1y["7daysAgo"].values[0])
-        next_yr_days30ago_EPS = float(row_1y["30daysAgo"].values[0])
-        next_yr_days60ago_EPS = float(row_1y["60daysAgo"].values[0])
-        next_yr_days90ago_EPS = float(row_1y["90daysAgo"].values[0])
+        row_1y = et.loc["+1y"]
+        next_yr_days7ago_EPS  = float(row_1y["7daysAgo"])
+        next_yr_days30ago_EPS = float(row_1y["30daysAgo"])
+        next_yr_days60ago_EPS = float(row_1y["60daysAgo"])
+        next_yr_days90ago_EPS = float(row_1y["90daysAgo"])
     except Exception:
         pass
 
     try:
         ge = yf_ticker.growth_estimates
-        ge["period"] = ge.index
-        curr_yr_growthrate_symbol = float(ge.loc[ge["period"] == "0y",  "stockTrend"].values[0]) * 100
-        next_yr_growthrate_symbol = float(ge.loc[ge["period"] == "+1y", "stockTrend"].values[0]) * 100
-        curr_yr_growthrate_index  = float(ge.loc[ge["period"] == "0y",  "indexTrend"].values[0]) * 100
-        next_yr_growthrate_index  = float(ge.loc[ge["period"] == "+1y", "indexTrend"].values[0]) * 100
+        curr_yr_growthrate_symbol = float(ge.loc["0y",  "stockTrend"]) * 100
+        next_yr_growthrate_symbol = float(ge.loc["+1y", "stockTrend"]) * 100
+        curr_yr_growthrate_index  = float(ge.loc["0y",  "indexTrend"]) * 100
+        next_yr_growthrate_index  = float(ge.loc["+1y", "indexTrend"]) * 100
     except Exception:
         pass
 
@@ -416,7 +417,7 @@ def _process_ticker(symbol: str, api_key: str, window_days: int = 90, PE_yr_rang
     df["PFCF_TTM"] = round(df["stock_price"].iloc[0] / df["FCF_per_share_TTM"], 2)
     df["FCF_yield_TTM"] = round((df["FCF_per_share_TTM"] / df["stock_price"].iloc[0]) * 100, 2)
 
-    # EPS trend (unavailable in new yfinance — stored as None)
+    # EPS trend from yfinance eps_trend
     df["next_yr_days7ago_EPS"] = _safe_round(next_yr_days7ago_EPS)
     df["next_yr_days30ago_EPS"] = _safe_round(next_yr_days30ago_EPS)
     df["next_yr_days60ago_EPS"] = _safe_round(next_yr_days60ago_EPS)

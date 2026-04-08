@@ -38,6 +38,15 @@
         /* ── Main ── */
         #main-content { margin-left: 220px; padding: 2rem 1.5rem; }
         h1 { font-size: 1.6rem; }
+
+        /* ── Param card ── */
+        .param-card { border-top: 3px solid #4e79a7 !important; }
+        .param-label {
+            font-size: 0.7rem; font-weight: 700; color: #6c757d;
+            text-transform: uppercase; letter-spacing: 0.07em;
+            margin-bottom: 4px; display: block;
+        }
+        .input-group-text { font-size: 0.8rem; color: #6c757d; background: #f8f9fa; }
         #spinner { display: none; }
 
         /* ── Summary cards ── */
@@ -107,24 +116,33 @@
     <h1 class="mb-3">Single Stock Status</h1>
 
     <!-- Input -->
-    <div class="card p-3 mb-4">
-        <div class="form-row align-items-end">
-            <div class="col-md-3">
-                <label for="tickerInput"><strong>Ticker symbol</strong></label>
-                <input type="text" class="form-control" id="tickerInput" placeholder="e.g. MO">
-            </div>
-            <div class="col-md-2">
-                <label for="windowDays">Price window (days)</label>
-                <input type="number" class="form-control" id="windowDays" value="90" min="10" max="365">
-            </div>
-            <div class="col-md-2">
-                <label for="peYrRange">PE history (yrs)</label>
-                <input type="number" class="form-control" id="peYrRange" value="6" min="2" max="20">
-            </div>
-            <div class="col-md-2">
-                <div class="d-flex" style="gap:6px;">
-                    <button class="btn btn-primary flex-grow-1" onclick="loadStock()">Load</button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="clearAll()">Clear</button>
+    <div class="card param-card mb-4">
+        <div class="card-body py-3">
+            <div class="form-row align-items-end">
+                <div class="col-md-3">
+                    <label class="param-label" for="tickerInput">Ticker Symbol</label>
+                    <input type="text" class="form-control" id="tickerInput" placeholder="e.g. MO">
+                </div>
+                <div class="col-md-2">
+                    <label class="param-label" for="windowDays">Price Window</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="windowDays" value="90" min="10" max="365">
+                        <div class="input-group-append"><span class="input-group-text">days</span></div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="param-label" for="peYrRange">PE History</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="peYrRange" value="6" min="2" max="20">
+                        <div class="input-group-append"><span class="input-group-text">yrs</span></div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="param-label">&nbsp;</label>
+                    <div class="d-flex" style="gap:6px;">
+                        <button class="btn btn-primary flex-grow-1" onclick="loadStock()">Load</button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="clearAll()">Clear</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -159,40 +177,82 @@
 
 <script>
     // Columns to show in the table (in order)
-    const TABLE_COLS = [
-        { key: "date",                                        label: "Date" },
-        { key: "Ticker",                                      label: "Ticker" },
-        { key: "stock_price",                                 label: "Price" },
-        { key: "price_valuation_assessment",                  label: "Assessment" },
-        { key: "EPS_currentQtr",                              label: "EPS CurrQtr" },
-        { key: "EPS_nextQtr",                                 label: "EPS NxtQtr" },
-        { key: "EPS_TTM",                                     label: "EPS TTM" },
-        { key: "EPS_nextQtr_TTM",                             label: "EPS NxtQtr TTM" },
-        { key: "EPS_nextYr",                                  label: "EPS Next Yr" },
-        { key: "PE_TTM",                                      label: "PE TTM" },
-        { key: "PE_TTM_avg",                                  label: "PE TTM Avg" },
-        { key: "PE_TTM_volatility_+",                         label: "PE TTM +" },
-        { key: "PE_TTM_volatility_-",                         label: "PE TTM -" },
-        { key: "PE_nyr_avg",                                  label: "PE Nyr Avg" },
-        { key: "PE_nyr_volatility_+",                         label: "PE Nyr +" },
-        { key: "PE_nyr_volatility_-",                         label: "PE Nyr -" },
-        { key: "relative_valuation_TTM_+",                    label: "Fair Val TTM +" },
-        { key: "relative_valuation_TTM_-",                    label: "Fair Val TTM -" },
-        { key: "relative_valuation_TTM_median",               label: "Fair Val TTM Med" },
-        { key: "relative_valuation_nextQuater_projected_+",   label: "Fair Val NxtQtr +" },
-        { key: "relative_valuation_nextQuater_projected_-",   label: "Fair Val NxtQtr -" },
+    // Static columns — PE nyr columns are resolved dynamically via getPECols()
+    const TABLE_COLS_STATIC = [
+        { key: "date",                                           label: "Date" },
+        { key: "Ticker",                                         label: "Ticker" },
+        { key: "stock_price",                                    label: "Price" },
+        { key: "price_valuation_assessment",                     label: "Assessment" },
+        { key: "EPS_currentQtr",                                 label: "EPS CurrQtr" },
+        { key: "EPS_nextQtr",                                    label: "EPS NxtQtr" },
+        { key: "EPS_TTM",                                        label: "EPS TTM" },
+        { key: "EPS_nextQtr_TTM",                                label: "EPS NxtQtr TTM" },
+        { key: "EPS_nextYr",                                     label: "EPS Next Yr" },
+        { key: "next_yr_days7ago_EPS",                           label: "EPS Nxt Yr 7d Ago" },
+        { key: "next_yr_days30ago_EPS",                          label: "EPS Nxt Yr 30d Ago" },
+        { key: "next_yr_days60ago_EPS",                          label: "EPS Nxt Yr 60d Ago" },
+        { key: "next_yr_days90ago_EPS",                          label: "EPS Nxt Yr 90d Ago" },
+        { key: "PE_TTM",                                         label: "PE TTM" },
+        { key: "PE_TTM_avg",                                     label: "PE TTM Avg" },
+        { key: "PE_TTM_volatility_+",                            label: "PE TTM +" },
+        { key: "PE_TTM_volatility_-",                            label: "PE TTM -" },
+        // PE nyr slots — key filled by getPECols(nyr)
+        { key: "__PE_nyr_avg",                                   label: "__PE_nyr_avg" },
+        { key: "__PE_nyr_vol_hi",                                label: "__PE_nyr_vol_hi" },
+        { key: "__PE_nyr_vol_lo",                                label: "__PE_nyr_vol_lo" },
+        { key: "relative_valuation_TTM_+",                       label: "Fair Val TTM +" },
+        { key: "relative_valuation_TTM_-",                       label: "Fair Val TTM -" },
+        { key: "relative_valuation_TTM_median",                  label: "Fair Val TTM Med" },
+        { key: "relative_valuation_nextQuater_projected_+",      label: "Fair Val NxtQtr +" },
+        { key: "relative_valuation_nextQuater_projected_-",      label: "Fair Val NxtQtr -" },
         { key: "relative_valuation_nextQuater_projected_median", label: "Fair Val NxtQtr Med" },
-        { key: "relative_valuation_nextYear_projected_+",     label: "Fair Val NxtYr +" },
-        { key: "relative_valuation_nextYear_projected_-",     label: "Fair Val NxtYr -" },
-        { key: "relative_valuation_nextYear_projected_median",label: "Fair Val NxtYr Med" },
-        { key: "EPS_nextQtr_growthRate",                      label: "EPS NxtQtr Growth %" },
-        { key: "EPS_nextYr_growthRate",                       label: "EPS NxtYr Growth %" },
-        { key: "EarningYield_TTM",                            label: "Earn Yield TTM %" },
-        { key: "ERP_TTM",                                     label: "ERP TTM" },
-        { key: "BVPS_latest",                                 label: "BVPS" },
-        { key: "PFCF_TTM",                                    label: "P/FCF TTM" },
-        { key: "FCF_yield_TTM",                               label: "FCF Yield %" },
+        { key: "relative_valuation_nextYear_projected_+",        label: "Fair Val NxtYr +" },
+        { key: "relative_valuation_nextYear_projected_-",        label: "Fair Val NxtYr -" },
+        { key: "relative_valuation_nextYear_projected_median",   label: "Fair Val NxtYr Med" },
+        { key: "EPS_nextQtr_growthRate",                         label: "EPS NxtQtr Growth %" },
+        { key: "EPS_nextYr_growthRate",                          label: "EPS NxtYr Growth %" },
+        { key: "EarningYield_TTM",                               label: "Earn Yield TTM %" },
+        { key: "ERP_TTM",                                        label: "ERP TTM" },
+        { key: "BVPS_latest",                                    label: "BVPS" },
+        { key: "PFCF_TTM",                                       label: "P/FCF TTM" },
+        { key: "FCF_yield_TTM",                                  label: "FCF Yield %" },
     ];
+
+    // Returns a resolved copy of TABLE_COLS with PE nyr slots filled in
+    function getTableCols(peYrRange) {
+        const nyr = peYrRange - 1;
+        return TABLE_COLS_STATIC.map(c => {
+            if (c.key === "__PE_nyr_avg")    return { key: `PE_${nyr}yr_avg`,           label: `PE ${nyr}yr Avg` };
+            if (c.key === "__PE_nyr_vol_hi") return { key: `PE_${nyr}yr_volatility_+`,  label: `PE ${nyr}yr +` };
+            if (c.key === "__PE_nyr_vol_lo") return { key: `PE_${nyr}yr_volatility_-`,  label: `PE ${nyr}yr -` };
+            return c;
+        });
+    }
+
+    // ── Session persistence ────────────────────────────────────────────────
+    const SESSION_KEY = "singleStock_state";
+
+    function saveSession(ticker, windowDays, peYrRange, rows) {
+        try {
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ticker, windowDays, peYrRange, rows }));
+        } catch(e) {}
+    }
+
+    function restoreSession() {
+        try {
+            const raw = sessionStorage.getItem(SESSION_KEY);
+            if (!raw) return;
+            const s = JSON.parse(raw);
+            document.getElementById("tickerInput").value = s.ticker     || "";
+            document.getElementById("windowDays").value  = s.windowDays || "90";
+            document.getElementById("peYrRange").value   = s.peYrRange  || "6";
+            if (s.rows && s.rows.length) {
+                const peYrRange = parseInt(s.peYrRange) || 6;
+                renderSummary(s.rows, s.ticker, peYrRange);
+                renderTable(s.rows, s.ticker, peYrRange);
+            }
+        } catch(e) {}
+    }
 
     async function loadStock() {
         const ticker = document.getElementById("tickerInput").value.trim().toUpperCase();
@@ -217,16 +277,9 @@
 
             if (data.error) { showError(data.error); return; }
 
-            // Patch dynamic PE n-yr column names
-            const nyr = peYrRange - 1;
-            TABLE_COLS.forEach(c => {
-                if (c.key === "PE_nyr_avg")           { c.key = `PE_${nyr}yr_avg`;           c.label = `PE ${nyr}yr Avg`; }
-                if (c.key === "PE_nyr_volatility_+")  { c.key = `PE_${nyr}yr_volatility_+`;  c.label = `PE ${nyr}yr +`; }
-                if (c.key === "PE_nyr_volatility_-")  { c.key = `PE_${nyr}yr_volatility_-`;  c.label = `PE ${nyr}yr -`; }
-            });
-
             renderSummary(data.rows, ticker, peYrRange);
-            renderTable(data.rows, ticker);
+            renderTable(data.rows, ticker, peYrRange);
+            saveSession(ticker, windowDays, peYrRange, data.rows);
         } catch (err) {
             document.getElementById("spinner").style.display = "none";
             showError(err.message);
@@ -269,7 +322,8 @@
         document.getElementById("summarySection").classList.remove("d-none");
     }
 
-    function renderTable(rows, ticker) {
+    function renderTable(rows, ticker, peYrRange) {
+        const cols = getTableCols(peYrRange);
         const head = document.getElementById("tableHead");
         const body = document.getElementById("tableBody");
         head.innerHTML = "";
@@ -277,7 +331,7 @@
 
         // Header
         const tr = document.createElement("tr");
-        TABLE_COLS.forEach(c => {
+        cols.forEach(c => {
             const th = document.createElement("th");
             th.textContent = c.label;
             tr.appendChild(th);
@@ -288,7 +342,7 @@
         rows.forEach((row, idx) => {
             const tr = document.createElement("tr");
             if (idx === 0) tr.className = "highlight-row";  // most recent row
-            TABLE_COLS.forEach(c => {
+            cols.forEach(c => {
                 const td = document.createElement("td");
                 const val = row[c.key];
                 if (c.key === "price_valuation_assessment") {
@@ -338,12 +392,14 @@
         document.getElementById("summaryCards").innerHTML = "";
         document.getElementById("tableHead").innerHTML    = "";
         document.getElementById("tableBody").innerHTML    = "";
+        sessionStorage.removeItem(SESSION_KEY);
     }
 
     document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("tickerInput").addEventListener("keydown", e => {
             if (e.key === "Enter") loadStock();
         });
+        restoreSession();
     });
 </script>
 
