@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+jinja2
+python-dotenv
+yfinance
+pandas
+numpy
+scikit-learn
+requests
+openpyxl

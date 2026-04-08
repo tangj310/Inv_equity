@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ':*)",
+      "Bash(pip show:*)",
+      "Bash(python -c \"import yfinance; print\\(yfinance.__version__\\)\")",
+      "Bash(pip index:*)",
+      "Bash(pip install:*)"
+    ]
+  }
+}

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single Stock Status</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        body { background: #f8f9fa; }
+
+        /* ── Sidebar ── */
+        #sidebar {
+            width: 220px; min-height: 100vh;
+            background: #1e2a38; color: #c8d6e5;
+            position: fixed; top: 0; left: 0;
+            display: flex; flex-direction: column;
+            padding-top: 1rem;
+        }
+        #sidebar .sidebar-brand {
+            font-size: 1.1rem; font-weight: 700; color: #fff;
+            padding: 0.75rem 1.25rem 1.25rem;
+            border-bottom: 1px solid #2e3f52; letter-spacing: 0.03em;
+        }
+        #sidebar .nav-section {
+            font-size: 0.7rem; text-transform: uppercase;
+            letter-spacing: 0.1em; color: #6b8099;
+            padding: 1.25rem 1.25rem 0.4rem;
+        }
+        #sidebar .nav-link {
+            color: #c8d6e5; padding: 0.55rem 1.25rem;
+            display: flex; align-items: center; gap: 0.6rem;
+            font-size: 0.9rem; transition: background 0.15s;
+        }
+        #sidebar .nav-link:hover { background: #2e3f52; color: #fff; text-decoration: none; }
+        #sidebar .nav-link.active { background: #2e3f52; color: #fff; }
+        #sidebar .nav-link svg { flex-shrink: 0; }
+
+        /* ── Main ── */
+        #main-content { margin-left: 220px; padding: 2rem 1.5rem; }
+        h1 { font-size: 1.6rem; }
+        #spinner { display: none; }
+
+        /* ── Summary cards ── */
+        .metric-card {
+            background: #fff; border-radius: 8px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+            padding: 1rem 1.2rem; margin-bottom: 1rem;
+        }
+        .metric-card .label { font-size: 0.72rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.06em; }
+        .metric-card .value { font-size: 1.3rem; font-weight: 700; }
+        .metric-card .sub   { font-size: 0.8rem; color: #6c757d; }
+        .badge-undervalued { background: #d4edda; color: #155724; }
+        .badge-overvalued  { background: #f8d7da; color: #721c24; }
+        .badge-fair        { background: #fff3cd; color: #856404; }
+
+        /* ── Table ── */
+        .table-wrapper { overflow-x: auto; max-height: 60vh; overflow-y: auto; }
+        .table-wrapper thead th {
+            position: sticky; top: 0; background: #1e2a38; color: #fff;
+            white-space: nowrap; font-size: 0.75rem; z-index: 1;
+        }
+        td { font-size: 0.78rem; white-space: nowrap; }
+        .assessment-undervalued { color: #28a745; font-weight: 600; }
+        .assessment-overvalued  { color: #dc3545; font-weight: 600; }
+        .assessment-fair        { color: #856404; font-weight: 600; }
+        .highlight-row { background: #fffbe6 !important; }
+    </style>
+</head>
+<body>
+
+<!-- ── Sidebar ────────────────────────────────────────────────── -->
+<nav id="sidebar">
+    <div class="sidebar-brand">📈 Inv Dashboard</div>
+
+    <div class="nav-section">Analysis</div>
+    <a class="nav-link" href="/stock-screening">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/>
+        </svg>
+        Stock Screening
+    </a>
+    <a class="nav-link active" href="/single-stock">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07z"/>
+        </svg>
+        Single Stock Status
+    </a>
+
+    <div class="nav-section">More</div>
+    <a class="nav-link" href="/">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5v-5h3v5H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L8.354 1.146z"/>
+        </svg>
+        Home
+    </a>
+</nav>
+
+<!-- ── Main ──────────────────────────────────────────────────── -->
+<div id="main-content">
+<div class="container-fluid">
+    <h1 class="mb-3">Single Stock Status</h1>
+
+    <!-- Input -->
+    <div class="card p-3 mb-4">
+        <div class="form-row align-items-end">
+            <div class="col-md-3">
+                <label for="tickerInput"><strong>Ticker symbol</strong></label>
+                <input type="text" class="form-control" id="tickerInput" placeholder="e.g. MO">
+            </div>
+            <div class="col-md-2">
+                <label for="windowDays">Price window (days)</label>
+                <input type="number" class="form-control" id="windowDays" value="90" min="10" max="365">
+            </div>
+            <div class="col-md-2">
+                <label for="peYrRange">PE history (yrs)</label>
+                <input type="number" class="form-control" id="peYrRange" value="6" min="2" max="20">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary btn-block" onclick="loadStock()">Load</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="spinner" class="text-center my-4">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Fetching data — this may take a minute...</p>
+    </div>
+
+    <div id="errorBox" class="alert alert-danger d-none"></div>
+
+    <!-- Summary cards -->
+    <div id="summarySection" class="d-none">
+        <div class="row" id="summaryCards"></div>
+    </div>
+
+    <!-- Full daily table -->
+    <div id="resultsSection" class="d-none">
+        <h5 class="mt-3 mb-2">
+            Daily history — <span id="tickerLabel"></span>
+            <small class="text-muted" id="rowCount"></small>
+        </h5>
+        <div class="table-wrapper">
+            <table class="table table-bordered table-sm table-hover bg-white mb-0">
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div></div>
+
+<script>
+    // Columns to show in the table (in order)
+    const TABLE_COLS = [
+        { key: "date",                                        label: "Date" },
+        { key: "Ticker",                                      label: "Ticker" },
+        { key: "stock_price",                                 label: "Price" },
+        { key: "price_valuation_assessment",                  label: "Assessment" },
+        { key: "EPS_currentQtr",                              label: "EPS CurrQtr" },
+        { key: "EPS_nextQtr",                                 label: "EPS NxtQtr" },
+        { key: "EPS_TTM",                                     label: "EPS TTM" },
+        { key: "EPS_nextQtr_TTM",                             label: "EPS NxtQtr TTM" },
+        { key: "EPS_nextYr",                                  label: "EPS Next Yr" },
+        { key: "PE_TTM",                                      label: "PE TTM" },
+        { key: "PE_TTM_avg",                                  label: "PE TTM Avg" },
+        { key: "PE_TTM_volatility_+",                         label: "PE TTM +" },
+        { key: "PE_TTM_volatility_-",                         label: "PE TTM -" },
+        { key: "PE_nyr_avg",                                  label: "PE Nyr Avg" },
+        { key: "PE_nyr_volatility_+",                         label: "PE Nyr +" },
+        { key: "PE_nyr_volatility_-",                         label: "PE Nyr -" },
+        { key: "relative_valuation_TTM_+",                    label: "Fair Val TTM +" },
+        { key: "relative_valuation_TTM_-",                    label: "Fair Val TTM -" },
+        { key: "relative_valuation_TTM_median",               label: "Fair Val TTM Med" },
+        { key: "relative_valuation_nextQuater_projected_+",   label: "Fair Val NxtQtr +" },
+        { key: "relative_valuation_nextQuater_projected_-",   label: "Fair Val NxtQtr -" },
+        { key: "relative_valuation_nextQuater_projected_median", label: "Fair Val NxtQtr Med" },
+        { key: "relative_valuation_nextYear_projected_+",     label: "Fair Val NxtYr +" },
+        { key: "relative_valuation_nextYear_projected_-",     label: "Fair Val NxtYr -" },
+        { key: "relative_valuation_nextYear_projected_median",label: "Fair Val NxtYr Med" },
+        { key: "EPS_nextQtr_growthRate",                      label: "EPS NxtQtr Growth %" },
+        { key: "EPS_nextYr_growthRate",                       label: "EPS NxtYr Growth %" },
+        { key: "EarningYield_TTM",                            label: "Earn Yield TTM %" },
+        { key: "ERP_TTM",                                     label: "ERP TTM" },
+        { key: "BVPS_latest",                                 label: "BVPS" },
+        { key: "PFCF_TTM",                                    label: "P/FCF TTM" },
+        { key: "FCF_yield_TTM",                               label: "FCF Yield %" },
+    ];
+
+    async function loadStock() {
+        const ticker = document.getElementById("tickerInput").value.trim().toUpperCase();
+        if (!ticker) { alert("Please enter a ticker symbol."); return; }
+
+        const windowDays = parseInt(document.getElementById("windowDays").value) || 90;
+        const peYrRange  = parseInt(document.getElementById("peYrRange").value)  || 6;
+
+        document.getElementById("spinner").style.display = "block";
+        document.getElementById("resultsSection").classList.add("d-none");
+        document.getElementById("summarySection").classList.add("d-none");
+        document.getElementById("errorBox").classList.add("d-none");
+
+        try {
+            const resp = await fetch("/single-stock-data", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ticker, window_days: windowDays, PE_yr_range: peYrRange }),
+            });
+            const data = await resp.json();
+            document.getElementById("spinner").style.display = "none";
+
+            if (data.error) { showError(data.error); return; }
+
+            // Patch dynamic PE n-yr column names
+            const nyr = peYrRange - 1;
+            TABLE_COLS.forEach(c => {
+                if (c.key === "PE_nyr_avg")           { c.key = `PE_${nyr}yr_avg`;           c.label = `PE ${nyr}yr Avg`; }
+                if (c.key === "PE_nyr_volatility_+")  { c.key = `PE_${nyr}yr_volatility_+`;  c.label = `PE ${nyr}yr +`; }
+                if (c.key === "PE_nyr_volatility_-")  { c.key = `PE_${nyr}yr_volatility_-`;  c.label = `PE ${nyr}yr -`; }
+            });
+
+            renderSummary(data.rows, ticker, peYrRange);
+            renderTable(data.rows, ticker);
+        } catch (err) {
+            document.getElementById("spinner").style.display = "none";
+            showError(err.message);
+        }
+    }
+
+    function renderSummary(rows, ticker, peYrRange) {
+        if (!rows.length) return;
+        const latest = rows[0];  // most recent trading day first
+        const nyr = peYrRange - 1;
+        const assessment = latest["price_valuation_assessment"] || "—";
+        const badgeClass = assessment === "undervalued" ? "badge-undervalued"
+                         : assessment === "overvalued"  ? "badge-overvalued"
+                         : "badge-fair";
+
+        const cards = [
+            { label: "Current Price",  value: fmt(latest["stock_price"]),        sub: ticker },
+            { label: "Assessment",     value: assessment.toUpperCase(),           sub: "vs TTM fair value", badge: badgeClass },
+            { label: "PE TTM",         value: fmt(latest["PE_TTM"]),              sub: `Avg: ${fmt(latest["PE_TTM_avg"])}` },
+            { label: `PE ${nyr}yr Avg`,value: fmt(latest[`PE_${nyr}yr_avg`]),    sub: `± ${fmt(latest[`PE_${nyr}yr_volatility_+`])} / ${fmt(latest[`PE_${nyr}yr_volatility_-`])}` },
+            { label: "EPS TTM",        value: fmt(latest["EPS_TTM"]),             sub: `Next yr: ${fmt(latest["EPS_nextYr"])}` },
+            { label: "Fair Val TTM",   value: `${fmt(latest["relative_valuation_TTM_-"])} – ${fmt(latest["relative_valuation_TTM_+"])}`, sub: `Median: ${fmt(latest["relative_valuation_TTM_median"])}` },
+            { label: "ERP TTM",        value: fmt(latest["ERP_TTM"]),             sub: "Equity risk premium" },
+            { label: "FCF Yield",      value: fmt(latest["FCF_yield_TTM"]) + "%", sub: `P/FCF: ${fmt(latest["PFCF_TTM"])}` },
+        ];
+
+        const container = document.getElementById("summaryCards");
+        container.innerHTML = "";
+        cards.forEach(c => {
+            const col = document.createElement("div");
+            col.className = "col-6 col-md-3";
+            col.innerHTML = `
+                <div class="metric-card">
+                    <div class="label">${c.label}</div>
+                    <div class="value ${c.badge || ''}">${c.value}</div>
+                    <div class="sub">${c.sub}</div>
+                </div>`;
+            container.appendChild(col);
+        });
+        document.getElementById("summarySection").classList.remove("d-none");
+    }
+
+    function renderTable(rows, ticker) {
+        const head = document.getElementById("tableHead");
+        const body = document.getElementById("tableBody");
+        head.innerHTML = "";
+        body.innerHTML = "";
+
+        // Header
+        const tr = document.createElement("tr");
+        TABLE_COLS.forEach(c => {
+            const th = document.createElement("th");
+            th.textContent = c.label;
+            tr.appendChild(th);
+        });
+        head.appendChild(tr);
+
+        // Rows
+        rows.forEach((row, idx) => {
+            const tr = document.createElement("tr");
+            if (idx === 0) tr.className = "highlight-row";  // most recent row
+            TABLE_COLS.forEach(c => {
+                const td = document.createElement("td");
+                const val = row[c.key];
+                if (c.key === "price_valuation_assessment") {
+                    td.textContent = val ?? "—";
+                    if (val === "undervalued") td.className = "assessment-undervalued";
+                    else if (val === "overvalued") td.className = "assessment-overvalued";
+                    else if (val === "fair") td.className = "assessment-fair";
+                } else if (c.key === "date") {
+                    td.textContent = val ?? "—";
+                } else if (val === null || val === undefined) {
+                    td.textContent = "—";
+                } else if (typeof val === "number") {
+                    td.textContent = val.toFixed(2);
+                } else {
+                    td.textContent = val;
+                }
+                tr.appendChild(td);
+            });
+            body.appendChild(tr);
+        });
+
+        document.getElementById("tickerLabel").textContent = ticker;
+        document.getElementById("rowCount").textContent = `(${rows.length} trading days)`;
+        document.getElementById("resultsSection").classList.remove("d-none");
+    }
+
+    function fmt(v) {
+        if (v === null || v === undefined) return "—";
+        if (typeof v === "number") return v.toFixed(2);
+        return v;
+    }
+
+    function showError(msg) {
+        const box = document.getElementById("errorBox");
+        box.textContent = msg;
+        box.classList.remove("d-none");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("tickerInput").addEventListener("keydown", e => {
+            if (e.key === "Enter") loadStock();
+        });
+    });
+</script>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</body>
+</html>

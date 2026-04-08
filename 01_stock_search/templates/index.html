@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PE TTM Stock Valuation</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        body { background: #f8f9fa; }
+        h1 { font-size: 1.6rem; }
+        .assessment-undervalued { color: #28a745; font-weight: 600; }
+        .assessment-overvalued  { color: #dc3545; font-weight: 600; }
+        .assessment-fair        { color: #ffc107; font-weight: 600; }
+        #spinner { display: none; }
+        .table-wrapper { overflow-x: auto; }
+        th { white-space: nowrap; font-size: 0.8rem; }
+        td { font-size: 0.8rem; white-space: nowrap; }
+        .error-row td { color: #dc3545; }
+
+        /* ── Progress chips ── */
+        .chip {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 2px 10px; border-radius: 20px; font-size: 0.78rem;
+            font-weight: 600; border: 1px solid transparent;
+        }
+        .chip-pending  { background: #e9ecef; color: #495057; border-color: #ced4da; }
+        .chip-fetching { background: #cce5ff; color: #004085; border-color: #b8daff; }
+        .chip-done     { background: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .chip-error    { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+
+        /* ── Sidebar nav ── */
+        #sidebar {
+            width: 220px;
+            min-height: 100vh;
+            background: #1e2a38;
+            color: #c8d6e5;
+            position: fixed;
+            top: 0; left: 0;
+            display: flex;
+            flex-direction: column;
+            padding-top: 1rem;
+        }
+        #sidebar .sidebar-brand {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            padding: 0.75rem 1.25rem 1.25rem;
+            border-bottom: 1px solid #2e3f52;
+            letter-spacing: 0.03em;
+        }
+        #sidebar .nav-section {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #6b8099;
+            padding: 1.25rem 1.25rem 0.4rem;
+        }
+        #sidebar .nav-link {
+            color: #c8d6e5;
+            padding: 0.55rem 1.25rem;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.9rem;
+            transition: background 0.15s;
+        }
+        #sidebar .nav-link:hover { background: #2e3f52; color: #ffffff; text-decoration: none; }
+        #sidebar .nav-link.active { background: #2e3f52; color: #ffffff; }
+        #sidebar .nav-link svg { flex-shrink: 0; }
+
+        #main-content { margin-left: 220px; padding: 2rem 1.5rem; }
+    </style>
+</head>
+<body>
+
+<!-- ── Sidebar ─────────────────────────────────────────────────── -->
+<nav id="sidebar">
+    <div class="sidebar-brand">📈 Inv Dashboard</div>
+
+    <div class="nav-section">Analysis</div>
+    <a class="nav-link active" href="/stock-screening">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/>
+        </svg>
+        Stock Screening
+    </a>
+    <a class="nav-link" href="/single-stock">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07z"/>
+        </svg>
+        Single Stock Status
+    </a>
+
+    <div class="nav-section">More</div>
+    <a class="nav-link" href="/">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5v-5h3v5H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L8.354 1.146z"/>
+        </svg>
+        Home
+    </a>
+</nav>
+
+<div id="main-content">
+<div class="container-fluid">
+    <h1 class="mb-3">Stock Screening</h1>
+
+    <div class="card p-3 mb-4">
+        <div class="form-row align-items-end">
+            <div class="col-md-7">
+                <label for="tickerInput"><strong>Ticker symbols</strong> <small class="text-muted">(comma-separated, e.g. MSFT, AAPL, MO)</small></label>
+                <input type="text" class="form-control" id="tickerInput" placeholder="CL, MO, SKWD">
+            </div>
+            <div class="col-md-2">
+                <label for="windowDays">Price window (days)</label>
+                <input type="number" class="form-control" id="windowDays" value="90" min="10" max="365">
+            </div>
+            <div class="col-md-2">
+                <label for="peYrRange">PE history (yrs)</label>
+                <input type="number" class="form-control" id="peYrRange" value="6" min="2" max="20">
+            </div>
+            <div class="col-md-1">
+                <button class="btn btn-primary btn-block" onclick="runAnalysis()">Analyze</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress panel -->
+    <div id="progressSection" class="d-none mb-4">
+        <div class="card p-3">
+            <div class="d-flex align-items-center mb-2">
+                <div class="spinner-border spinner-border-sm text-primary mr-2" id="progressSpinner" role="status"></div>
+                <strong id="progressLabel">Fetching...</strong>
+                <span class="ml-auto text-muted small" id="progressCount"></span>
+            </div>
+            <div class="progress mb-3" style="height:8px;">
+                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                     role="progressbar" style="width:0%"></div>
+            </div>
+            <!-- Ticker status chips -->
+            <div id="tickerChips" class="d-flex flex-wrap" style="gap:6px;"></div>
+        </div>
+    </div>
+
+    <div id="errorBox" class="alert alert-danger d-none"></div>
+
+    <div id="resultsSection" class="d-none">
+        <h5>Results <span id="asOfDate" class="text-muted small"></span></h5>
+        <div class="table-wrapper">
+            <table class="table table-bordered table-hover table-sm bg-white">
+                <thead class="thead-dark" id="tableHead"></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    let DISPLAY_COLS = [
+        { key: "Ticker",                                       label: "Ticker" },
+        { key: "stock_price",                                  label: "Price" },
+        { key: "price_valuation_assessment",                   label: "Assessment" },
+        { key: "EPS_TTM",                                      label: "EPS TTM" },
+        { key: "EPS_nextYr",                                   label: "EPS Next Yr" },
+        { key: "PE_TTM",                                       label: "PE TTM" },
+        { key: "PE_TTM_avg",                                   label: "PE TTM Avg (90d)" },
+        { key: "_PE_nyr_avg",                                  label: "PE Nyr Avg" },
+        { key: "_PE_nyr_vol_hi",                               label: "PE Nyr High" },
+        { key: "_PE_nyr_vol_lo",                               label: "PE Nyr Low" },
+        { key: "relative_valuation_TTM_+",                     label: "Fair Val TTM +" },
+        { key: "relative_valuation_TTM_-",                     label: "Fair Val TTM -" },
+        { key: "relative_valuation_TTM_median",                label: "Fair Val TTM Med" },
+        { key: "relative_valuation_nextYear_projected_+",      label: "Fair Val NxtYr +" },
+        { key: "relative_valuation_nextYear_projected_-",      label: "Fair Val NxtYr -" },
+        { key: "relative_valuation_nextYear_projected_median", label: "Fair Val NxtYr Med" },
+        { key: "EPS_nextYr_growthRate",                        label: "EPS NxtYr Growth %" },
+        { key: "EPS_nextQtr_growthRate",                       label: "EPS NxtQtr Growth %" },
+        { key: "ERP_TTM",                                      label: "ERP TTM" },
+        { key: "PFCF_TTM",                                     label: "P/FCF TTM" },
+        { key: "FCF_yield_TTM",                                label: "FCF Yield %" },
+        { key: "BVPS_latest",                                  label: "BVPS" },
+        { key: "curr_yr_growthrate_symbol",                    label: "Curr Yr Growth %" },
+        { key: "next_yr_growthrate_symbol",                    label: "Next Yr Growth %" },
+        { key: "Industry_PE_TTM_avg",                          label: "Industry PE Avg" },
+    ];
+
+    // Resolve placeholder keys using actual PE_yr_range
+    function resolveColKeys(peYrRange) {
+        const n = peYrRange - 1;
+        DISPLAY_COLS.forEach(c => {
+            if (c.key === "_PE_nyr_avg")    { c.key = `PE_${n}yr_avg`;          c.label = `PE ${n}yr Avg`; }
+            if (c.key === "_PE_nyr_vol_hi") { c.key = `PE_${n}yr_volatility_+`; c.label = `PE ${n}yr High`; }
+            if (c.key === "_PE_nyr_vol_lo") { c.key = `PE_${n}yr_volatility_-`; c.label = `PE ${n}yr Low`; }
+        });
+    }
+
+    // ── Progress state ─────────────────────────────────────────────────────
+    let chipMap = {};   // ticker -> chip element
+    let headerBuilt = false;
+
+    function initProgress(tickers) {
+        headerBuilt = false;
+        chipMap = {};
+        document.getElementById("tableHead").innerHTML = "";
+        document.getElementById("tableBody").innerHTML = "";
+        document.getElementById("progressBar").style.width = "0%";
+        document.getElementById("tickerChips").innerHTML = "";
+        document.getElementById("progressSection").classList.remove("d-none");
+        document.getElementById("progressSpinner").style.display = "";
+        document.getElementById("resultsSection").classList.add("d-none");
+        document.getElementById("errorBox").classList.add("d-none");
+
+        tickers.forEach(t => {
+            const chip = document.createElement("span");
+            chip.className = "chip chip-pending";
+            chip.id = `chip-${t}`;
+            chip.textContent = t;
+            document.getElementById("tickerChips").appendChild(chip);
+            chipMap[t] = chip;
+        });
+    }
+
+    function setChip(ticker, state) {
+        const chip = chipMap[ticker];
+        if (!chip) return;
+        chip.className = `chip chip-${state}`;
+        const icon = state === "fetching" ? " ⏳" : state === "done" ? " ✓" : " ✗";
+        chip.textContent = ticker + icon;
+    }
+
+    function updateProgressBar(index, total) {
+        const pct = Math.round((index / total) * 100);
+        const bar = document.getElementById("progressBar");
+        bar.style.width = pct + "%";
+        bar.setAttribute("aria-valuenow", pct);
+        document.getElementById("progressCount").textContent = `${index} / ${total}`;
+    }
+
+    function finalizeProgress() {
+        document.getElementById("progressSpinner").style.display = "none";
+        document.getElementById("progressLabel").textContent = "Done";
+        document.getElementById("progressBar").classList.remove("progress-bar-animated");
+        document.getElementById("progressBar").style.width = "100%";
+    }
+
+    // ── Table helpers ──────────────────────────────────────────────────────
+    function ensureHeader() {
+        if (headerBuilt) return;
+        headerBuilt = true;
+        const head = document.getElementById("tableHead");
+        const tr = document.createElement("tr");
+        DISPLAY_COLS.forEach(c => {
+            const th = document.createElement("th");
+            th.textContent = c.label;
+            tr.appendChild(th);
+        });
+        head.appendChild(tr);
+        document.getElementById("asOfDate").textContent = `as of ${new Date().toLocaleDateString()}`;
+        document.getElementById("resultsSection").classList.remove("d-none");
+    }
+
+    function appendRow(row) {
+        ensureHeader();
+        const body = document.getElementById("tableBody");
+        const tr = document.createElement("tr");
+        DISPLAY_COLS.forEach(c => {
+            const td = document.createElement("td");
+            const val = row[c.key];
+            if (c.key === "price_valuation_assessment") {
+                td.textContent = val ?? "—";
+                if (val === "undervalued")     td.className = "assessment-undervalued";
+                else if (val === "overvalued") td.className = "assessment-overvalued";
+                else if (val === "fair")       td.className = "assessment-fair";
+            } else if (val === null || val === undefined) {
+                td.textContent = "—";
+            } else if (typeof val === "number") {
+                td.textContent = val.toFixed(2);
+            } else {
+                td.textContent = val;
+            }
+            tr.appendChild(td);
+        });
+        body.appendChild(tr);
+    }
+
+    function appendErrorRow(ticker, message) {
+        ensureHeader();
+        const body = document.getElementById("tableBody");
+        const tr = document.createElement("tr");
+        tr.className = "error-row";
+        const td = document.createElement("td");
+        td.colSpan = DISPLAY_COLS.length;
+        td.textContent = `${ticker}: ${message}`;
+        tr.appendChild(td);
+        body.appendChild(tr);
+    }
+
+    // When "done" arrives, update Industry_PE_TTM_avg in all rows
+    function patchIndustryAvg(screen) {
+        const body = document.getElementById("tableBody");
+        const rows = body.querySelectorAll("tr:not(.error-row)");
+        const avgIdx = DISPLAY_COLS.findIndex(c => c.key === "Industry_PE_TTM_avg");
+        if (avgIdx < 0) return;
+        rows.forEach((tr, i) => {
+            const val = screen[i]?.Industry_PE_TTM_avg;
+            const td = tr.querySelectorAll("td")[avgIdx];
+            if (td) td.textContent = val != null ? val.toFixed(2) : "—";
+        });
+    }
+
+    // ── Main ───────────────────────────────────────────────────────────────
+    async function runAnalysis() {
+        const raw = document.getElementById("tickerInput").value;
+        const tickers = raw.split(",").map(t => t.trim().toUpperCase()).filter(t => t);
+        if (!tickers.length) { alert("Please enter at least one ticker."); return; }
+
+        const windowDays = parseInt(document.getElementById("windowDays").value) || 90;
+        const peYrRange  = parseInt(document.getElementById("peYrRange").value)  || 6;
+
+        resolveColKeys(peYrRange);
+        initProgress(tickers);
+
+        try {
+            const resp = await fetch("/analyze-stream", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tickers, window_days: windowDays, PE_yr_range: peYrRange }),
+            });
+
+            if (!resp.ok) throw new Error(`Server error: ${resp.status}`);
+
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+
+                // SSE events are separated by double newlines
+                const parts = buffer.split("\n\n");
+                buffer = parts.pop();   // keep incomplete last chunk
+
+                for (const part of parts) {
+                    const line = part.trim();
+                    if (!line.startsWith("data: ")) continue;
+                    let event;
+                    try { event = JSON.parse(line.slice(6)); } catch { continue; }
+
+                    if (event.type === "progress") {
+                        document.getElementById("progressLabel").textContent = `Fetching ${event.ticker}…`;
+                        setChip(event.ticker, "fetching");
+
+                    } else if (event.type === "result") {
+                        setChip(event.ticker, "done");
+                        updateProgressBar(event.index, event.total);
+                        appendRow(event.row);
+
+                    } else if (event.type === "error") {
+                        setChip(event.ticker, "error");
+                        updateProgressBar(event.index, event.total);
+                        appendErrorRow(event.ticker, event.message);
+
+                    } else if (event.type === "done") {
+                        finalizeProgress();
+                        patchIndustryAvg(event.screen);
+                        if (event.errors?.length) {
+                            showError("Errors: " + event.errors.map(e => `${e.ticker}: ${e.message}`).join("; "));
+                        }
+                    } else if (event.type === "error_fatal") {
+                        showError(event.message);
+                        finalizeProgress();
+                    }
+                }
+            }
+        } catch (err) {
+            finalizeProgress();
+            showError(err.message);
+        }
+    }
+
+    function showError(msg) {
+        const box = document.getElementById("errorBox");
+        box.textContent = msg;
+        box.classList.remove("d-none");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("tickerInput").addEventListener("keydown", e => {
+            if (e.key === "Enter") runAnalysis();
+        });
+    });
+</script>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</div></div><!-- /container-fluid /main-content -->
+</body>
+</html>

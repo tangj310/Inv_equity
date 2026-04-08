@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Dashboard</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        body { background: #f8f9fa; }
+
+        /* ── Sidebar nav ── */
+        #sidebar {
+            width: 220px;
+            min-height: 100vh;
+            background: #1e2a38;
+            color: #c8d6e5;
+            position: fixed;
+            top: 0; left: 0;
+            display: flex;
+            flex-direction: column;
+            padding-top: 1rem;
+        }
+        #sidebar .sidebar-brand {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            padding: 0.75rem 1.25rem 1.25rem;
+            border-bottom: 1px solid #2e3f52;
+            letter-spacing: 0.03em;
+        }
+        #sidebar .nav-section {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #6b8099;
+            padding: 1.25rem 1.25rem 0.4rem;
+        }
+        #sidebar .nav-link {
+            color: #c8d6e5;
+            padding: 0.55rem 1.25rem;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.9rem;
+            transition: background 0.15s;
+        }
+        #sidebar .nav-link:hover,
+        #sidebar .nav-link.active {
+            background: #2e3f52;
+            color: #ffffff;
+            text-decoration: none;
+        }
+        #sidebar .nav-link svg { flex-shrink: 0; }
+
+        /* ── Main content ── */
+        #main-content {
+            margin-left: 220px;
+            padding: 2.5rem 2rem;
+        }
+
+        /* ── Hero card ── */
+        .hero-card {
+            background: linear-gradient(135deg, #1e2a38 0%, #2e3f52 100%);
+            color: #fff;
+            border-radius: 12px;
+            padding: 2.5rem 2rem;
+            margin-bottom: 2rem;
+        }
+        .hero-card h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .hero-card p  { color: #c8d6e5; margin: 0; }
+
+        /* ── Tool cards ── */
+        .tool-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            transition: transform 0.15s, box-shadow 0.15s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .tool-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+            text-decoration: none;
+            color: inherit;
+        }
+        .tool-card .card-body { padding: 1.5rem; }
+        .tool-icon {
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        .icon-blue   { background: #e8f0fe; color: #1a73e8; }
+        .icon-green  { background: #e6f4ea; color: #1e8e3e; }
+        .icon-orange { background: #fce8e6; color: #d93025; }
+        .tool-card h5 { font-size: 1rem; font-weight: 600; margin-bottom: 0.3rem; }
+        .tool-card p  { font-size: 0.85rem; color: #6c757d; margin: 0; }
+    </style>
+</head>
+<body>
+
+<!-- ── Sidebar ─────────────────────────────────────────────────── -->
+<nav id="sidebar">
+    <div class="sidebar-brand">📈 Inv Dashboard</div>
+
+    <div class="nav-section">Analysis</div>
+    <a class="nav-link" href="/stock-screening">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/>
+        </svg>
+        Stock Screening
+    </a>
+    <a class="nav-link" href="/single-stock">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07z"/>
+        </svg>
+        Single Stock Status
+    </a>
+
+    <div class="nav-section">More</div>
+    <a class="nav-link" href="/">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5v-5h3v5H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L8.354 1.146z"/>
+        </svg>
+        Home
+    </a>
+</nav>
+
+<!-- ── Main content ────────────────────────────────────────────── -->
+<div id="main-content">
+
+    <div class="hero-card">
+        <h1>Investment Dashboard</h1>
+        <p>Fundamental analysis tools powered by Alpha Vantage &amp; yfinance</p>
+    </div>
+
+    <h5 class="mb-3 text-muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.08em;">Tools</h5>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <a class="tool-card card" href="/stock-screening">
+                <div class="card-body">
+                    <div class="tool-icon icon-blue">📊</div>
+                    <h5>Stock Screening</h5>
+                    <p>PE TTM valuation, EPS forecasts, fair value ranges, FCF yield and ERP for any ticker list.</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 mb-4">
+            <a class="tool-card card" href="/single-stock">
+                <div class="card-body">
+                    <div class="tool-icon icon-green">📉</div>
+                    <h5>Single Stock Status</h5>
+                    <p>Trailing 90-day daily PE TTM, EPS, fair value ranges and valuation assessment for one stock.</p>
+                </div>
+            </a>
+        </div>
+        <!-- Placeholder cards for future tools -->
+        <div class="col-md-4 mb-4">
+            <div class="tool-card card" style="opacity:0.45; cursor:default;">
+                <div class="card-body">
+                    <div class="tool-icon icon-green">📉</div>
+                    <h5>Sector Analysis <span class="badge badge-secondary" style="font-size:0.65rem;">Coming soon</span></h5>
+                    <p>S&amp;P 500 sector breakdown and earnings by industry.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="tool-card card" style="opacity:0.45; cursor:default;">
+                <div class="card-body">
+                    <div class="tool-icon icon-orange">📋</div>
+                    <h5>Portfolio Summary <span class="badge badge-secondary" style="font-size:0.65rem;">Coming soon</span></h5>
+                    <p>Consolidated view across your holdings.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</body>
+</html>
