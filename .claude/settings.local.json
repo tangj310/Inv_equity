@@ -5,7 +5,10 @@
       "Bash(pip show:*)",
       "Bash(python -c \"import yfinance; print\\(yfinance.__version__\\)\")",
       "Bash(pip index:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)"
     ]
   }
 }
