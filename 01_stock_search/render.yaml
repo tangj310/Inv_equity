@@ -11,4 +11,4 @@ services:
       - key: CACHE_TTL_HOURS
         value: "4"
       - key: PYTHON_VERSION
-        value: "3.9.18"
+        value: "3.11.11"
