@@ -56,7 +56,7 @@ def process_ticker_return(symbol: str, years: float, api_key: str) -> dict:
             daily_df.index    = pd.to_datetime(daily_df.index)
 
     if daily_df.empty:
-        raise ValueError("No daily price data returned from Alpha Vantage")
+        raise ValueError("No data returned from API for this ticker")
 
     # Adjust for splits
     for date_i in daily_df.index.date:
