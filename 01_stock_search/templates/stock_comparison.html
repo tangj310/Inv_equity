@@ -271,10 +271,20 @@
         } catch(e) { /* corrupt storage */ }
     }
 
-    // Keep chart full-width if the window is resized
+    // Keep chart full-width if the window is resized (handles screen rotation too)
     window.addEventListener("resize", () => {
         const el = document.getElementById("returnChart");
-        if (el && el.data) Plotly.Plots.resize(el);
+        if (!el || !el.data) return;
+        const mobile = window.innerWidth <= 767;
+        Plotly.relayout(el, {
+            "margin.r": mobile ? 10 : 160,
+            "margin.l": mobile ? 40 : 60,
+            "margin.b": mobile ? 60 : 30,
+            "legend.orientation": mobile ? "h" : "v",
+            "legend.x": mobile ? 0 : 1.02,
+            "legend.y": mobile ? -0.12 : 1,
+            "xaxis.rangeslider.visible": !mobile,
+        });
     });
 
     // ── Progress helpers ──────────────────────────────────────────────────
@@ -372,10 +382,11 @@
         const minDate  = allDates.reduce((a, b) => a < b ? a : b, allDates[0]);
         const maxDate  = allDates.reduce((a, b) => a > b ? a : b, allDates[0]);
 
+        const isMobile = window.innerWidth <= 767;
         const layout = {
             title: {
                 text: `<b>Normalised Total Return</b>  ·  ${years}-Year Window`,
-                font: { size: 16, color: "#1e2a38", family: "system-ui, sans-serif" },
+                font: { size: isMobile ? 13 : 16, color: "#1e2a38", family: "system-ui, sans-serif" },
                 x: 0.0,
                 xanchor: "left",
                 pad: { l: 4 },
@@ -383,7 +394,7 @@
             xaxis: {
                 title: { text: "" },
                 rangeslider: {
-                    visible: true,
+                    visible: !isMobile,
                     thickness: 0.05,
                     bgcolor: "#ffffff",
                     bordercolor: "#dee2e6",
@@ -393,16 +404,16 @@
                 showgrid: false,
                 zeroline: false,
                 linecolor: "#dee2e6",
-                tickfont: { size: 11, color: "#6c757d" },
+                tickfont: { size: isMobile ? 9 : 11, color: "#6c757d" },
                 tickformat: "%b %Y",
             },
             yaxis: {
-                title: { text: "Return (×)", standoff: 8, font: { size: 12, color: "#6c757d" } },
+                title: { text: isMobile ? "" : "Return (×)", standoff: 8, font: { size: 12, color: "#6c757d" } },
                 tickformat: ".2f",
                 showgrid: false,
                 zeroline: false,
                 linecolor: "#dee2e6",
-                tickfont: { size: 11, color: "#6c757d" },
+                tickfont: { size: isMobile ? 9 : 11, color: "#6c757d" },
             },
             // Break-even reference line at y=1
             shapes: [{
@@ -419,10 +430,18 @@
                 showarrow: false,
                 font: { size: 10, color: "#adb5bd" },
             }],
-            legend: {
+            legend: isMobile ? {
+                orientation: "h",
+                x: 0, y: -0.12,
+                xanchor: "left",
+                yanchor: "top",
+                bgcolor: "rgba(255,255,255,0.92)",
+                bordercolor: "#dee2e6",
+                borderwidth: 1,
+                font: { size: 10, color: "#1e2a38", family: "system-ui, sans-serif" },
+            } : {
                 orientation: "v",
-                x: 1.02,
-                y: 1,
+                x: 1.02, y: 1,
                 xanchor: "left",
                 yanchor: "top",
                 bgcolor: "rgba(255,255,255,0.92)",
@@ -439,7 +458,9 @@
             },
             plot_bgcolor: "#ffffff",
             paper_bgcolor: "#ffffff",
-            margin: { t: 55, b: 30, l: 60, r: 160 },
+            margin: isMobile
+                ? { t: 40, b: 60, l: 40, r: 10 }
+                : { t: 55, b: 30, l: 60, r: 160 },
             font: { family: "system-ui, -apple-system, sans-serif" },
         };
 
