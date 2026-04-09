@@ -153,6 +153,8 @@
         </div>
     </div>
 
+    <div class="small text-muted mb-3"><strong>Note:</strong> Due to API rate limits, only 75 requests per minute are allowed. Each ticker uses multiple API calls.</div>
+
     <!-- Progress panel -->
     <div id="progressSection" class="d-none mb-4">
         <div class="card p-3">
@@ -184,17 +186,21 @@
 </div>
 
 <script>
-    let DISPLAY_COLS = [
+    const DISPLAY_COLS_STATIC = [
         { key: "Ticker",                                       label: "Ticker" },
         { key: "stock_price",                                  label: "Price" },
         { key: "price_valuation_assessment",                   label: "Assessment" },
         { key: "EPS_TTM",                                      label: "EPS TTM" },
         { key: "EPS_nextYr",                                   label: "EPS Next Yr" },
+        { key: "next_yr_days7ago_EPS",                         label: "EPS Nxt Yr 7d Ago" },
+        { key: "next_yr_days30ago_EPS",                        label: "EPS Nxt Yr 30d Ago" },
+        { key: "next_yr_days60ago_EPS",                        label: "EPS Nxt Yr 60d Ago" },
+        { key: "next_yr_days90ago_EPS",                        label: "EPS Nxt Yr 90d Ago" },
         { key: "PE_TTM",                                       label: "PE TTM" },
         { key: "PE_TTM_avg",                                   label: "PE TTM Avg (90d)" },
-        { key: "_PE_nyr_avg",                                  label: "PE Nyr Avg" },
-        { key: "_PE_nyr_vol_hi",                               label: "PE Nyr High" },
-        { key: "_PE_nyr_vol_lo",                               label: "PE Nyr Low" },
+        { key: "__PE_nyr_avg",                                 label: "__PE_nyr_avg" },
+        { key: "__PE_nyr_vol_hi",                              label: "__PE_nyr_vol_hi" },
+        { key: "__PE_nyr_vol_lo",                              label: "__PE_nyr_vol_lo" },
         { key: "relative_valuation_TTM_+",                     label: "Fair Val TTM +" },
         { key: "relative_valuation_TTM_-",                     label: "Fair Val TTM -" },
         { key: "relative_valuation_TTM_median",                label: "Fair Val TTM Med" },
@@ -212,15 +218,17 @@
         { key: "Industry_PE_TTM_avg",                          label: "Industry PE Avg" },
     ];
 
-    // Resolve placeholder keys using actual PE_yr_range
-    function resolveColKeys(peYrRange) {
+    function getDisplayCols(peYrRange) {
         const n = peYrRange - 1;
-        DISPLAY_COLS.forEach(c => {
-            if (c.key === "_PE_nyr_avg")    { c.key = `PE_${n}yr_avg`;          c.label = `PE ${n}yr Avg`; }
-            if (c.key === "_PE_nyr_vol_hi") { c.key = `PE_${n}yr_volatility_+`; c.label = `PE ${n}yr High`; }
-            if (c.key === "_PE_nyr_vol_lo") { c.key = `PE_${n}yr_volatility_-`; c.label = `PE ${n}yr Low`; }
+        return DISPLAY_COLS_STATIC.map(c => {
+            if (c.key === "__PE_nyr_avg")    return { key: `PE_${n}yr_avg`,           label: `PE ${n}yr Avg` };
+            if (c.key === "__PE_nyr_vol_hi") return { key: `PE_${n}yr_volatility_+`,  label: `PE ${n}yr High` };
+            if (c.key === "__PE_nyr_vol_lo") return { key: `PE_${n}yr_volatility_-`,  label: `PE ${n}yr Low` };
+            return c;
         });
     }
+
+    let currentPeYrRange = 6;  // tracks the PE yr range for the current result set
 
     // ── Session persistence ────────────────────────────────────────────────
     const SESSION_KEY = "stockScreening_state";
@@ -248,8 +256,7 @@
             document.getElementById("peYrRange").value   = s.peYrRange  || "6";
             if (s.rows && s.rows.length) {
                 savedRows = s.rows;
-                const peYrRange = parseInt(s.peYrRange) || 6;
-                resolveColKeys(peYrRange);
+                currentPeYrRange = parseInt(s.peYrRange) || 6;
                 savedRows.forEach(r => appendRow(r));
                 if (s.asOfDate) document.getElementById("asOfDate").textContent = s.asOfDate;
             }
@@ -309,9 +316,10 @@
     function ensureHeader() {
         if (headerBuilt) return;
         headerBuilt = true;
+        const cols = getDisplayCols(currentPeYrRange);
         const head = document.getElementById("tableHead");
         const tr = document.createElement("tr");
-        DISPLAY_COLS.forEach(c => {
+        cols.forEach(c => {
             const th = document.createElement("th");
             th.textContent = c.label;
             tr.appendChild(th);
@@ -323,9 +331,10 @@
 
     function appendRow(row) {
         ensureHeader();
+        const cols = getDisplayCols(currentPeYrRange);
         const body = document.getElementById("tableBody");
         const tr = document.createElement("tr");
-        DISPLAY_COLS.forEach(c => {
+        cols.forEach(c => {
             const td = document.createElement("td");
             const val = row[c.key];
             if (c.key === "price_valuation_assessment") {
@@ -347,11 +356,12 @@
 
     function appendErrorRow(ticker, message) {
         ensureHeader();
+        const cols = getDisplayCols(currentPeYrRange);
         const body = document.getElementById("tableBody");
         const tr = document.createElement("tr");
         tr.className = "error-row";
         const td = document.createElement("td");
-        td.colSpan = DISPLAY_COLS.length;
+        td.colSpan = cols.length;
         td.textContent = `${ticker}: ${message}`;
         tr.appendChild(td);
         body.appendChild(tr);
@@ -359,9 +369,10 @@
 
     // When "done" arrives, update Industry_PE_TTM_avg in all rows
     function patchIndustryAvg(screen) {
+        const cols = getDisplayCols(currentPeYrRange);
         const body = document.getElementById("tableBody");
         const rows = body.querySelectorAll("tr:not(.error-row)");
-        const avgIdx = DISPLAY_COLS.findIndex(c => c.key === "Industry_PE_TTM_avg");
+        const avgIdx = cols.findIndex(c => c.key === "Industry_PE_TTM_avg");
         if (avgIdx < 0) return;
         rows.forEach((tr, i) => {
             const val = screen[i]?.Industry_PE_TTM_avg;
@@ -379,7 +390,7 @@
         const windowDays = parseInt(document.getElementById("windowDays").value) || 90;
         const peYrRange  = parseInt(document.getElementById("peYrRange").value)  || 6;
 
-        resolveColKeys(peYrRange);
+        currentPeYrRange = peYrRange;
         savedRows = [];
         initProgress(tickers);
 
