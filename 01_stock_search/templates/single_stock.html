@@ -66,10 +66,35 @@
         @media (max-width: 767px) {
             #sidebar { transform: translateX(-220px); }
             #sidebar.open { transform: translateX(0); }
-            #main-content { margin-left: 0 !important; padding: 1rem; padding-top: 3.5rem; }
+            #main-content { margin-left: 0 !important; padding: 0.75rem; padding-top: 3.5rem; }
             #hamburger { display: block; }
             .table-wrapper { -webkit-overflow-scrolling: touch; overflow-x: auto; }
             h1 { font-size: 1.2rem; }
+
+            /* compact metric cards on mobile */
+            .metric-card {
+                padding: 0.55rem 0.65rem;
+                margin-bottom: 0.5rem;
+                border-radius: 6px;
+            }
+            .metric-card .label {
+                font-size: 0.58rem;
+                letter-spacing: 0.04em;
+                margin-bottom: 2px;
+            }
+            .metric-card .value {
+                font-size: 0.95rem;
+                word-break: break-word;
+                line-height: 1.2;
+            }
+            .metric-card .sub {
+                font-size: 0.65rem;
+                margin-top: 2px;
+                line-height: 1.3;
+            }
+            /* tighten row gutters so cards don't have excess spacing */
+            #summaryCards { margin-left: -0.35rem; margin-right: -0.35rem; }
+            #summaryCards > [class*="col-"] { padding-left: 0.35rem; padding-right: 0.35rem; }
         }
 
         /* ── Summary cards ── */
