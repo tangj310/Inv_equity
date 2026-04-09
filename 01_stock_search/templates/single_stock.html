@@ -94,7 +94,12 @@
             }
             /* tighten row gutters so cards don't have excess spacing */
             #summaryCards { margin-left: -0.35rem; margin-right: -0.35rem; }
-            #summaryCards > [class*="col-"] { padding-left: 0.35rem; padding-right: 0.35rem; }
+            #summaryCards > [class*="col-"] {
+                padding-left: 0.35rem; padding-right: 0.35rem;
+                display: flex;
+            }
+            /* stretch card to fill column height so same-row cards match */
+            #summaryCards .metric-card { flex: 1; }
         }
 
         /* ── Summary cards ── */
