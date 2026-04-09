@@ -79,8 +79,11 @@
             cursor: pointer;
             text-decoration: none;
             color: inherit;
-            display: block;
+            display: flex;
+            height: 100%;
         }
+        .tool-card .card-body { display: flex; flex-direction: column; }
+        .tool-card p { flex-grow: 1; }
         .tool-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.12);
@@ -142,7 +145,6 @@
 
     <div class="hero-card">
         <h1>Investment Dashboard</h1>
-        <p>Fundamental analysis tools powered by Alpha Vantage &amp; yfinance</p>
     </div>
 
     <h5 class="mb-3 text-muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.08em;">Tools</h5>
