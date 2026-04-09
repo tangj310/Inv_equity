@@ -102,11 +102,15 @@
             border-radius: 6px; padding: 6px 9px; cursor: pointer;
         }
         #hamburger span { display: block; width: 20px; height: 2px; background: #fff; margin: 4px 0; }
+        #returnChart { width: 100%; height: 500px; }
         @media (max-width: 767px) {
             #sidebar { transform: translateX(-220px); }
             #sidebar.open { transform: translateX(0); }
             #main-content { margin-left: 0 !important; padding: 1rem; padding-top: 3.5rem; }
             #hamburger { display: block; }
+            #returnChart { height: 300px; }
+            .table-responsive { -webkit-overflow-scrolling: touch; }
+            h1 { font-size: 1.2rem; }
         }
     </style>
 </head>
@@ -158,27 +162,27 @@
     <div class="card param-card mb-4">
         <div class="card-body py-3">
             <div class="form-row align-items-end">
-                <div class="col-md-5">
+                <div class="col-12 col-md-5 mb-2 mb-md-0">
                     <label class="param-label" for="tickerInput">Ticker Symbols</label>
                     <input type="text" class="form-control" id="tickerInput"
                            placeholder="e.g. SPY, MO, MSFT  (comma-separated)">
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-2 mb-2 mb-md-0">
                     <label class="param-label" for="yearsInput">Time Window</label>
                     <div class="input-group">
                         <input type="number" class="form-control" id="yearsInput" value="5" min="1" max="25" step="1">
                         <div class="input-group-append"><span class="input-group-text">yrs</span></div>
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-2 mb-2 mb-md-0">
                     <label class="param-label" for="initialInvestment">Initial Investment</label>
                     <div class="input-group">
                         <div class="input-group-prepend"><span class="input-group-text">$</span></div>
                         <input type="number" class="form-control" id="initialInvestment" value="10000" min="1" step="1000">
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <label class="param-label">&nbsp;</label>
+                <div class="col-12 col-md-3">
+                    <label class="param-label d-none d-md-block">&nbsp;</label>
                     <div class="d-flex" style="gap:6px;">
                         <button class="btn btn-primary flex-grow-1" onclick="runComparison()">Compare</button>
                         <button class="btn btn-outline-secondary btn-sm" onclick="clearAll()">Clear</button>
@@ -211,13 +215,13 @@
     <!-- Chart -->
     <div id="chartSection" class="d-none">
         <div class="card p-3 mb-4">
-            <div id="returnChart" style="width:100%; height:500px;"></div>
+            <div id="returnChart"></div>
         </div>
 
         <!-- Return table -->
         <div class="card p-3">
             <h6 class="mb-3">Return Summary <span id="tablePeriodLabel" class="text-muted small"></span></h6>
-            <div style="overflow-x:auto;">
+            <div class="table-responsive">
                 <table class="table table-bordered table-sm table-hover bg-white mb-0">
                     <thead class="thead-dark" id="tableHead"></thead>
                     <tbody id="tableBody"></tbody>

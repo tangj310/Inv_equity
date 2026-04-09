@@ -68,6 +68,8 @@
             #sidebar.open { transform: translateX(0); }
             #main-content { margin-left: 0 !important; padding: 1rem; padding-top: 3.5rem; }
             #hamburger { display: block; }
+            .table-wrapper { -webkit-overflow-scrolling: touch; overflow-x: auto; }
+            h1 { font-size: 1.2rem; }
         }
 
         /* ── Summary cards ── */
@@ -144,26 +146,26 @@
     <div class="card param-card mb-4">
         <div class="card-body py-3">
             <div class="form-row align-items-end">
-                <div class="col-md-3">
+                <div class="col-12 col-md-3 mb-2 mb-md-0">
                     <label class="param-label" for="tickerInput">Ticker Symbol</label>
                     <input type="text" class="form-control" id="tickerInput" placeholder="e.g. MO">
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-2 mb-2 mb-md-0">
                     <label class="param-label" for="windowDays">Price Window</label>
                     <div class="input-group">
                         <input type="number" class="form-control" id="windowDays" value="90" min="10" max="365">
                         <div class="input-group-append"><span class="input-group-text">days</span></div>
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-2 mb-2 mb-md-0">
                     <label class="param-label" for="peYrRange">PE History</label>
                     <div class="input-group">
                         <input type="number" class="form-control" id="peYrRange" value="6" min="2" max="20">
                         <div class="input-group-append"><span class="input-group-text">yrs</span></div>
                     </div>
                 </div>
-                <div class="col-md-2">
-                    <label class="param-label">&nbsp;</label>
+                <div class="col-12 col-md-2">
+                    <label class="param-label d-none d-md-block">&nbsp;</label>
                     <div class="d-flex" style="gap:6px;">
                         <button class="btn btn-primary flex-grow-1" onclick="loadStock()">Load</button>
                         <button class="btn btn-outline-secondary btn-sm" onclick="clearAll()">Clear</button>
