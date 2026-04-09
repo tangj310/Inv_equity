@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 
 from stock_analyzer import analyze_stocks, analyze_single_stock_detail, process_ticker_to_row
 from stock_comparison import process_ticker_return
+from cache import cache_clear, cache_stats
 
 load_dotenv()
 
@@ -167,6 +168,18 @@ async def stock_return_stream(body: ReturnComparisonRequest):
     )
 
 
+@app.get("/api/cache-stats")
+async def get_cache_stats():
+    return cache_stats()
+
+
+@app.post("/api/cache-clear")
+async def clear_cache():
+    cache_clear()
+    return {"status": "cleared"}
+
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)

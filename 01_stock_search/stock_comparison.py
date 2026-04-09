@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
+from cache import cache_get, cache_set
+
 
 def process_ticker_return(symbol: str, years: float, api_key: str) -> dict:
     """
@@ -22,6 +24,11 @@ def process_ticker_return(symbol: str, years: float, api_key: str) -> dict:
         }
     Raises on fatal error.
     """
+    cache_key = f"return:{symbol}:{years}"
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+
     today      = datetime.today()
     start_date = today - timedelta(days=int(years * 365))   # oldest boundary
     end_date   = today                                       # newest boundary
@@ -97,7 +104,7 @@ def process_ticker_return(symbol: str, years: float, api_key: str) -> dict:
             return None
         return v
 
-    return {
+    result = {
         "ticker":                 symbol,
         "dates":                  normalized.index.strftime("%Y-%m-%d").tolist(),
         "values":                 [_clean(v) for v in normalized.tolist()],
@@ -107,3 +114,5 @@ def process_ticker_return(symbol: str, years: float, api_key: str) -> dict:
         "end_price":              round(end_price, 2),
         "total_dividends":        round(total_dividends, 2),
     }
+    cache_set(cache_key, result)
+    return result

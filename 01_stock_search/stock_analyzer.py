@@ -7,6 +7,8 @@ import yfinance as yf
 from datetime import datetime
 from sklearn.linear_model import LinearRegression
 
+from cache import cache_get, cache_set
+
 warnings.filterwarnings("ignore")
 pd.set_option("display.max_rows", None)
 pd.set_option("display.max_columns", None)
@@ -96,6 +98,10 @@ def _clean_df_for_json(df: pd.DataFrame) -> list:
 
 
 def _process_ticker(symbol: str, api_key: str, window_days: int = 90, PE_yr_range: int = 6) -> pd.DataFrame:
+    cache_key = f"ticker:{symbol}:{window_days}:{PE_yr_range}"
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
     """
     Core per-ticker computation. Returns stock_consolidate_df (window_days rows)
     with all computed metrics as columns, plus a DatetimeIndex.
@@ -442,6 +448,7 @@ def _process_ticker(symbol: str, api_key: str, window_days: int = 90, PE_yr_rang
     ]:
         df.loc[condition, "price_valuation_assessment"] = category
 
+    cache_set(cache_key, df)
     return df
 
 

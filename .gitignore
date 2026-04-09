@@ -1,4 +1,6 @@
 .env
-.xlsx
-.csv
+*.xlsx
+*.csv
 inv_summary.ipynb
+__pycache__/
+*.pyc
