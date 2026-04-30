@@ -2,5 +2,6 @@
 *.xlsx
 *.csv
 inv_summary.ipynb
+inv_summary_01.ipynb
 __pycache__/
 *.pyc
