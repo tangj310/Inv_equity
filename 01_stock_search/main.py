@@ -168,6 +168,16 @@ async def stock_return_stream(body: ReturnComparisonRequest):
     )
 
 
+@app.get("/api/portfolio-returns")
+async def portfolio_returns():
+    """Serve pre-computed portfolio return data exported from inv_summary_01.ipynb."""
+    data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "portfolio_returns.json")
+    if not os.path.exists(data_path):
+        return {"rows": [], "CAGR_%": None, "sp500_CAGR_%": None, "MWR_IRR_%": None, "last_updated": None}
+    with open(data_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
 @app.get("/api/cache-stats")
 async def get_cache_stats():
     return cache_stats()

@@ -1,0 +1,48 @@
+{
+  "last_updated": "2026-05-04 01:10",
+  "CAGR_%": 7.28,
+  "sp500_CAGR_%": 15.53,
+  "MWR_IRR_%": 5.6,
+  "rows": [
+    {
+      "Activity_Yr": 2019,
+      "Ratio_Yearly_Return_%": 24.08,
+      "sp500_without_div_%": 28.79
+    },
+    {
+      "Activity_Yr": 2020,
+      "Ratio_Yearly_Return_%": -38.13,
+      "sp500_without_div_%": 16.16
+    },
+    {
+      "Activity_Yr": 2021,
+      "Ratio_Yearly_Return_%": 78.35,
+      "sp500_without_div_%": 27.04
+    },
+    {
+      "Activity_Yr": 2022,
+      "Ratio_Yearly_Return_%": -44.58,
+      "sp500_without_div_%": -19.48
+    },
+    {
+      "Activity_Yr": 2023,
+      "Ratio_Yearly_Return_%": 68.0,
+      "sp500_without_div_%": 24.29
+    },
+    {
+      "Activity_Yr": 2024,
+      "Ratio_Yearly_Return_%": 37.36,
+      "sp500_without_div_%": 23.3
+    },
+    {
+      "Activity_Yr": 2025,
+      "Ratio_Yearly_Return_%": -4.28,
+      "sp500_without_div_%": 16.35
+    },
+    {
+      "Activity_Yr": 2026,
+      "Ratio_Yearly_Return_%": -0.1,
+      "sp500_without_div_%": 5.68
+    }
+  ]
+}

@@ -104,6 +104,76 @@
         .tool-card h5 { font-size: 1rem; font-weight: 600; margin-bottom: 0.3rem; }
         .tool-card p  { font-size: 0.85rem; color: #6c757d; margin: 0; }
 
+        /* ── Section label ── */
+        .section-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #6c757d;
+            margin-bottom: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* ── Summary metric cards ── */
+        .metric-card {
+            background: #fff;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            padding: 1.1rem 1.4rem;
+        }
+        .metric-card .metric-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #6c757d;
+            margin-bottom: 0.25rem;
+        }
+        .metric-card .metric-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .metric-card .metric-sub {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 0.2rem;
+        }
+        .val-pos { color: #1e8e3e; }
+        .val-neg { color: #d93025; }
+        .val-neu { color: #1e2a38; }
+
+        /* ── Returns table ── */
+        #portfolio-table-wrap {
+            background: #fff;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            overflow: hidden;
+        }
+        #portfolio-table thead th {
+            background: #f1f3f5;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #6c757d;
+            border-bottom: 2px solid #dee2e6;
+            padding: 0.65rem 1rem;
+            white-space: nowrap;
+        }
+        #portfolio-table td {
+            padding: 0.55rem 1rem;
+            vertical-align: middle;
+            font-size: 0.9rem;
+            border-color: #f1f3f5;
+        }
+        #portfolio-table tbody tr:last-child td { border-bottom: none; }
+        .badge-out  { background:#e6f4ea; color:#1e8e3e; border-radius:5px; padding:2px 7px; font-size:0.78rem; font-weight:600; }
+        .badge-under{ background:#fce8e6; color:#d93025; border-radius:5px; padding:2px 7px; font-size:0.78rem; font-weight:600; }
+        .badge-flat { background:#f1f3f5; color:#5f6368; border-radius:5px; padding:2px 7px; font-size:0.78rem; font-weight:600; }
+        tr.current-yr td { background: #f0f4ff; font-weight: 500; }
+        #port-last-updated { font-size:0.72rem; color:#adb5bd; }
+
         /* ── Mobile sidebar ── */
         #sidebar { transition: transform 0.25s ease; z-index: 1000; }
         #sidebar-overlay {
@@ -124,6 +194,7 @@
             #main-content { margin-left: 0 !important; padding: 1rem; padding-top: 3.5rem; }
             #hamburger { display: block; }
             .col-md-4 { flex: 0 0 100%; max-width: 100%; }
+            .col-md-3 { flex: 0 0 50%; max-width: 50%; }
         }
     </style>
 </head>
@@ -158,7 +229,7 @@
     </a>
 
     <div class="nav-section">More</div>
-    <a class="nav-link" href="/">
+    <a class="nav-link active" href="/">
         <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
             <path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5v-5h3v5H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L8.354 1.146z"/>
         </svg>
@@ -173,9 +244,9 @@
         <h1>Investment Dashboard</h1>
     </div>
 
-    <h5 class="mb-3 text-muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.08em;">Tools</h5>
-
-    <div class="row">
+    <!-- ── Tools ── -->
+    <p class="section-label">Tools</p>
+    <div class="row mb-4">
         <div class="col-md-4 mb-4">
             <a class="tool-card card" href="/stock-screening">
                 <div class="card-body">
@@ -205,21 +276,187 @@
         </div>
     </div>
 
-</div>
+    <!-- ── Portfolio Returns ── -->
+    <div id="portfolio-section" style="display:none;">
+        <div class="d-flex align-items-baseline mb-3" style="gap:0.75rem;">
+            <p class="section-label mb-0">Portfolio Returns</p>
+            <span id="port-last-updated"></span>
+        </div>
+
+        <!-- Summary metric cards -->
+        <div class="row mb-3">
+            <div class="col-md-3 col-6 mb-3">
+                <div class="metric-card">
+                    <div class="metric-label">Portfolio CAGR</div>
+                    <div class="metric-value" id="m-cagr">—</div>
+                    <div class="metric-sub">Since inception (TWR)</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="metric-card">
+                    <div class="metric-label">S&amp;P 500 CAGR</div>
+                    <div class="metric-value val-neu" id="m-sp500-cagr">—</div>
+                    <div class="metric-sub">Price return only</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="metric-card">
+                    <div class="metric-label">MWR / IRR</div>
+                    <div class="metric-value val-neu" id="m-mwr">—</div>
+                    <div class="metric-sub">Dollar-weighted return</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="metric-card">
+                    <div class="metric-label">CAGR vs S&amp;P 500</div>
+                    <div class="metric-value" id="m-alpha">—</div>
+                    <div class="metric-sub">Portfolio CAGR minus benchmark</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Year-by-year table -->
+        <div id="portfolio-table-wrap">
+            <div id="port-loading" class="text-center py-4 text-muted" style="font-size:0.85rem;">
+                Loading…
+            </div>
+            <div style="overflow-x:auto;">
+                <table id="portfolio-table" class="table table-sm mb-0" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th class="text-right">Portfolio TWR %</th>
+                            <th class="text-right">S&amp;P 500 %</th>
+                            <th class="text-right">vs S&amp;P 500</th>
+                        </tr>
+                    </thead>
+                    <tbody id="portfolio-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- no-data state (shown if JSON file not found) -->
+    <div id="portfolio-no-data" style="display:none;" class="text-center py-4 text-muted" style="font-size:0.85rem;">
+        Portfolio returns not available — run the last cell of <code>inv_summary_01.ipynb</code> to generate data.
+    </div>
+
+</div><!-- /main-content -->
 
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script>
+    /* ── Sidebar mobile ── */
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebar-overlay');
-    document.getElementById('hamburger').addEventListener('click', function() {
+    document.getElementById('hamburger').addEventListener('click', () => {
         sidebar.classList.toggle('open');
         overlay.classList.toggle('show');
     });
-    overlay.addEventListener('click', function() {
+    overlay.addEventListener('click', () => {
         sidebar.classList.remove('open');
         overlay.classList.remove('show');
     });
+
+    /* ── Portfolio returns ── */
+    function fmt(v, decimals = 2) {
+        if (v === null || v === undefined) return '—';
+        return (v >= 0 ? '+' : '') + v.toFixed(decimals);
+    }
+    function colorClass(v) {
+        if (v === null || v === undefined) return 'val-neu';
+        return v >= 0 ? 'val-pos' : 'val-neg';
+    }
+
+    function renderPortfolio(data) {
+        const rows = data.rows || [];
+        if (!rows.length) {
+            document.getElementById('portfolio-no-data').style.display = 'block';
+            return;
+        }
+
+        /* Summary cards */
+        const cagr     = data['CAGR_%'];
+        const sp500c   = data['sp500_CAGR_%'];
+        const mwr      = data['MWR_IRR_%'];
+        const alpha    = (cagr !== null && sp500c !== null) ? +(cagr - sp500c).toFixed(2) : null;
+
+        const mCagr = document.getElementById('m-cagr');
+        mCagr.textContent = cagr !== null ? fmt(cagr) + '%' : '—';
+        mCagr.className   = 'metric-value ' + colorClass(cagr);
+
+        const mSp = document.getElementById('m-sp500-cagr');
+        mSp.textContent = sp500c !== null ? fmt(sp500c) + '%' : '—';
+        mSp.className   = 'metric-value val-neu';
+
+        const mMwr = document.getElementById('m-mwr');
+        mMwr.textContent = mwr !== null ? fmt(mwr) + '%' : '—';
+        mMwr.className   = 'metric-value ' + colorClass(mwr);
+
+        const mAlpha = document.getElementById('m-alpha');
+        mAlpha.textContent = alpha !== null ? fmt(alpha) + '%' : '—';
+        mAlpha.className   = 'metric-value ' + colorClass(alpha);
+
+        /* Last updated */
+        if (data.last_updated) {
+            document.getElementById('port-last-updated').textContent = 'updated ' + data.last_updated;
+        }
+
+        /* Year-by-year table */
+        const currentYear = new Date().getFullYear();
+        const tbody = document.getElementById('portfolio-tbody');
+        tbody.innerHTML = '';
+
+        rows.forEach(row => {
+            const yr    = row['Activity_Yr'];
+            const pRet  = row['Ratio_Yearly_Return_%'];
+            const spRet = row['sp500_without_div_%'];
+            const diff  = (pRet !== null && spRet !== null) ? +(pRet - spRet).toFixed(2) : null;
+            const isCur = yr === currentYear;
+
+            /* vs-S&P badge */
+            let badgeHtml = '—';
+            if (diff !== null) {
+                const cls  = diff > 0.05 ? 'badge-out' : (diff < -0.05 ? 'badge-under' : 'badge-flat');
+                const sign = diff >= 0 ? '+' : '';
+                badgeHtml  = `<span class="${cls}">${sign}${diff.toFixed(2)}%</span>`;
+            }
+
+            const pRetHtml  = pRet !== null
+                ? `<span style="color:${pRet >= 0 ? '#1e8e3e' : '#d93025'}; font-weight:500;">${fmt(pRet)}%</span>`
+                : '—';
+            const spRetHtml = spRet !== null ? spRet.toFixed(2) + '%' : '—';
+
+            const tr = document.createElement('tr');
+            if (isCur) tr.className = 'current-yr';
+            tr.innerHTML = `
+                <td>${yr}${isCur ? ' <small class="text-muted" style="font-size:0.72rem;">(YTD)</small>' : ''}</td>
+                <td class="text-right">${pRetHtml}</td>
+                <td class="text-right">${spRetHtml}</td>
+                <td class="text-right">${badgeHtml}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('port-loading').style.display = 'none';
+        document.getElementById('portfolio-table').style.display = '';
+        document.getElementById('portfolio-section').style.display = 'block';
+    }
+
+    fetch('/api/portfolio-returns')
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('port-loading').style.display = 'none';
+            if (!data.rows || data.rows.length === 0) {
+                document.getElementById('portfolio-no-data').style.display = 'block';
+            } else {
+                renderPortfolio(data);
+            }
+        })
+        .catch(() => {
+            document.getElementById('port-loading').style.display = 'none';
+            document.getElementById('portfolio-no-data').style.display = 'block';
+        });
 </script>
 </body>
 </html>
