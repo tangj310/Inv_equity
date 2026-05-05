@@ -392,11 +392,10 @@
                         <tr>
                             <th>Symbol</th>
                             <th class="text-right">Qty</th>
-                            <th class="text-right">Rolling Capital</th>
                             <th class="text-right">Avg Cost/Share</th>
-                            <th class="text-right">Position %</th>
-                            <th class="text-right">Capital Value</th>
                             <th class="text-right">Latest Price</th>
+                            <th class="text-right">Rolling Capital</th>
+                            <th class="text-right">Position %</th>
                             <th class="text-right">Unrealized P&amp;L</th>
                         </tr>
                     </thead>
@@ -547,11 +546,10 @@
             tr.innerHTML = `
                 <td><strong>${h['Symbol'] || '—'}</strong></td>
                 <td class="text-right">${qty !== null ? qty.toLocaleString() : '—'}</td>
-                <td class="text-right">${fmtMoney(capital)}</td>
                 <td class="text-right">${avgCost !== null ? '$' + avgCost.toFixed(2) : '—'}</td>
-                <td class="text-right">${posHtml}</td>
-                <td class="text-right">${fmtMoney(yearEnd, 0)}</td>
                 <td class="text-right">${latest !== null ? '$' + latest.toFixed(2) : '—'}</td>
+                <td class="text-right">${fmtMoney(capital)}</td>
+                <td class="text-right">${posHtml}</td>
                 <td class="text-right">${pnlHtml}</td>
             `;
             tbody.appendChild(tr);
