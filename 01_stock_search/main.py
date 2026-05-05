@@ -2,8 +2,11 @@ import asyncio
 import json
 import math
 import os
+from contextlib import asynccontextmanager
 
 import numpy as np
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
@@ -13,10 +16,35 @@ from dotenv import load_dotenv
 from stock_analyzer import analyze_stocks, analyze_single_stock_detail, process_ticker_to_row
 from stock_comparison import process_ticker_return
 from cache import cache_clear, cache_stats
+import portfolio_engine
 
 load_dotenv()
 
-app = FastAPI(title="PE TTM Stock Valuation")
+_scheduler = AsyncIOScheduler(timezone="America/New_York")
+
+
+def _run_portfolio_engine():
+    try:
+        print("[scheduler] Running portfolio_engine …")
+        portfolio_engine.main()
+        print("[scheduler] portfolio_engine complete.")
+    except Exception as exc:
+        print(f"[scheduler] portfolio_engine error: {exc}")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    loop = asyncio.get_event_loop()
+    _scheduler.add_job(
+        lambda: loop.run_in_executor(None, _run_portfolio_engine),
+        CronTrigger(hour=19, minute=0),  # 19:00 America/New_York (EST/EDT)
+    )
+    _scheduler.start()
+    yield
+    _scheduler.shutdown()
+
+
+app = FastAPI(title="PE TTM Stock Valuation", lifespan=lifespan)
 templates = Jinja2Templates(directory="templates")
 
 API_KEY = os.getenv("alpha_vantage_api_key", "")

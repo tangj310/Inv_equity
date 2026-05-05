@@ -378,7 +378,10 @@
 
     <!-- ── Open Positions ── -->
     <div id="holdings-section" style="display:none; margin-top:2rem;">
-        <p class="section-label mb-3">Open Positions</p>
+        <div class="d-flex align-items-baseline mb-3" style="gap:0.75rem;">
+            <p class="section-label mb-0">Open Positions</p>
+            <span id="holdings-last-updated" style="font-size:0.72rem; color:#adb5bd;"></span>
+        </div>
         <div id="holdings-table-wrap">
             <div id="holdings-loading" class="text-center py-4 text-muted" style="font-size:0.85rem;">
                 Loading…
@@ -388,17 +391,20 @@
                     <thead>
                         <tr>
                             <th>Symbol</th>
-                            <th class="text-right">Rolling Qty</th>
+                            <th class="text-right">Qty</th>
                             <th class="text-right">Rolling Capital</th>
                             <th class="text-right">Avg Cost/Share</th>
                             <th class="text-right">Position %</th>
-                            <th class="text-right">Year-End Capital Value</th>
-                            <th class="text-right">Latest Price (USD)</th>
+                            <th class="text-right">Capital Value</th>
+                            <th class="text-right">Latest Price</th>
                             <th class="text-right">Unrealized P&amp;L</th>
                         </tr>
                     </thead>
                     <tbody id="holdings-tbody"></tbody>
                 </table>
+            </div>
+            <div style="padding:0.5rem 1rem 0.75rem; font-size:0.72rem; color:#adb5bd;">
+                * All monetary values in USD
             </div>
         </div>
     </div>
@@ -497,8 +503,11 @@
         document.getElementById('portfolio-section').style.display = 'block';
     }
 
-    function renderHoldings(holdings) {
+    function renderHoldings(holdings, lastUpdated) {
         if (!holdings || !holdings.length) return;
+        if (lastUpdated) {
+            document.getElementById('holdings-last-updated').textContent = 'refreshed ' + lastUpdated;
+        }
         const tbody = document.getElementById('holdings-tbody');
         tbody.innerHTML = '';
 
@@ -548,21 +557,35 @@
         document.getElementById('holdings-section').style.display = 'block';
     }
 
-    fetch('/api/portfolio-returns')
-        .then(r => r.json())
-        .then(data => {
-            document.getElementById('port-loading').style.display = 'none';
-            if (!data.rows || data.rows.length === 0) {
+    let _lastUpdatedSeen = null;
+
+    function loadPortfolioData() {
+        return fetch('/api/portfolio-returns')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('port-loading').style.display = 'none';
+                if (!data.rows || data.rows.length === 0) {
+                    document.getElementById('portfolio-no-data').style.display = 'block';
+                    return;
+                }
+                // Only re-render if data is new (avoids flicker on poll)
+                if (data.last_updated !== _lastUpdatedSeen) {
+                    _lastUpdatedSeen = data.last_updated;
+                    renderPortfolio(data);
+                    renderHoldings(data.holdings || [], data.last_updated);
+                }
+            })
+            .catch(() => {
+                document.getElementById('port-loading').style.display = 'none';
                 document.getElementById('portfolio-no-data').style.display = 'block';
-            } else {
-                renderPortfolio(data);
-                renderHoldings(data.holdings || []);
-            }
-        })
-        .catch(() => {
-            document.getElementById('port-loading').style.display = 'none';
-            document.getElementById('portfolio-no-data').style.display = 'block';
-        });
+            });
+    }
+
+    // Initial load
+    loadPortfolioData();
+
+    // Poll every 5 minutes so the table auto-updates after the 19:00 EST engine run
+    setInterval(loadPortfolioData, 5 * 60 * 1000);
 </script>
 </body>
 </html>

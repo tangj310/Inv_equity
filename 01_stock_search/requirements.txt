@@ -9,3 +9,4 @@ numpy<2
 scikit-learn
 requests
 openpyxl
+apscheduler==3.10.4
