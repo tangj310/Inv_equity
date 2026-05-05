@@ -535,7 +535,12 @@
             if (pnl !== null && pnl !== undefined) {
                 const col  = pnl >= 0 ? '#1e8e3e' : '#d93025';
                 const sign = pnl >= 0 ? '+' : '';
-                pnlHtml = `<span style="color:${col};font-weight:500;">${sign}${fmtMoney(pnl)}</span>`;
+                let pctStr = '';
+                if (avgCost !== null && avgCost > 0 && qty !== null) {
+                    const pct = (pnl / (avgCost * qty)) * 100;
+                    pctStr = ` <span style="font-size:0.8em;opacity:0.85;">(${sign}${pct.toFixed(2)}%)</span>`;
+                }
+                pnlHtml = `<span style="color:${col};font-weight:500;">${sign}${fmtMoney(pnl)}${pctStr}</span>`;
             }
 
             const tr = document.createElement('tr');
