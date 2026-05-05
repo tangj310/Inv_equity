@@ -376,9 +376,9 @@
         </div>
     </div>
 
-    <!-- ── Current Holdings ── -->
+    <!-- ── Open Positions ── -->
     <div id="holdings-section" style="display:none; margin-top:2rem;">
-        <p class="section-label mb-3">Current Holdings</p>
+        <p class="section-label mb-3">Open Positions</p>
         <div id="holdings-table-wrap">
             <div id="holdings-loading" class="text-center py-4 text-muted" style="font-size:0.85rem;">
                 Loading…
@@ -388,12 +388,13 @@
                     <thead>
                         <tr>
                             <th>Symbol</th>
-                            <th class="text-right">Qty</th>
-                            <th class="text-right">Avg Cost</th>
-                            <th class="text-right">Latest Price</th>
-                            <th class="text-right">Unrealized P&amp;L</th>
+                            <th class="text-right">Rolling Qty</th>
+                            <th class="text-right">Rolling Capital</th>
+                            <th class="text-right">Avg Cost/Share</th>
                             <th class="text-right">Position %</th>
-                            <th>Next Earnings</th>
+                            <th class="text-right">Year-End Capital Value</th>
+                            <th class="text-right">Latest Price (USD)</th>
+                            <th class="text-right">Unrealized P&amp;L</th>
                         </tr>
                     </thead>
                     <tbody id="holdings-tbody"></tbody>
@@ -500,55 +501,44 @@
         if (!holdings || !holdings.length) return;
         const tbody = document.getElementById('holdings-tbody');
         tbody.innerHTML = '';
-        const today = new Date();
+
+        const fmtMoney = (v, dec=2) => {
+            if (v === null || v === undefined) return '—';
+            const sign = v < 0 ? '-' : '';
+            return sign + '$' + Math.abs(v).toLocaleString('en-US', {minimumFractionDigits: dec, maximumFractionDigits: dec});
+        };
 
         holdings.forEach(h => {
             const qty      = h['Rolling_Quantity'];
-            const avgCost  = h['Rolling_Price_Per_Share'];  // negative = invested
-            const latest   = h['latest_stock_price'];
+            const capital  = h['Rolling_Capital'];
+            const avgCost  = h['avg_cost_per_share'];
             const pos      = h['position_%'];
-            const nextDate = h['Next_qtr_date'];
+            const yearEnd  = h['Year_end_capital_value'];
+            const latest   = h['latest_stock_price'];
+            const pnl      = h['unrealized_pnl'];
 
-            // avgCost stored as negative (cost outflow); flip for display
-            const avgCostAbs = avgCost !== null ? Math.abs(avgCost) : null;
-
-            // Unrealized P&L: (latest - avgCostAbs) * qty
-            let pnlHtml = '—';
-            if (latest !== null && avgCostAbs !== null && qty !== null) {
-                const pnl = (latest - avgCostAbs) * qty;
-                const pct = avgCostAbs > 0 ? ((latest - avgCostAbs) / avgCostAbs * 100) : 0;
-                const col = pnl >= 0 ? '#1e8e3e' : '#d93025';
-                const sign = pnl >= 0 ? '+' : '';
-                pnlHtml = `<span style="color:${col};font-weight:500;">${sign}$${Math.abs(pnl).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})} (${sign}${pct.toFixed(1)}%)</span>`;
-            }
-
-            // Position % bar
-            const posVal = pos !== null ? pos : 0;
-            const barWidth = Math.min(posVal, 40) / 40 * 100; // scale: 40% = full bar
-            const posHtml = `
-                <span style="font-weight:500;">${posVal.toFixed(2)}%</span>
+            const posVal   = pos !== null ? pos : 0;
+            const barWidth = Math.min(posVal, 40) / 40 * 100;
+            const posHtml  = `<span style="font-weight:500;">${posVal.toFixed(2)}%</span>
                 <span class="pos-bar-bg ml-1"><span class="pos-bar-fill" style="width:${barWidth.toFixed(1)}%;"></span></span>`;
 
-            // Earnings badge
-            let earningsHtml = '—';
-            if (nextDate && nextDate !== 'None' && nextDate !== 'f') {
-                const d = new Date(nextDate);
-                if (!isNaN(d)) {
-                    const diff = Math.round((d - today) / 86400000);
-                    const label = diff <= 30 ? `${nextDate} <small>(${diff}d)</small>` : nextDate;
-                    earningsHtml = `<span class="earnings-badge">${label}</span>`;
-                }
+            let pnlHtml = '—';
+            if (pnl !== null && pnl !== undefined) {
+                const col  = pnl >= 0 ? '#1e8e3e' : '#d93025';
+                const sign = pnl >= 0 ? '+' : '';
+                pnlHtml = `<span style="color:${col};font-weight:500;">${sign}${fmtMoney(pnl)}</span>`;
             }
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${h['Symbol'] || '—'}</strong></td>
                 <td class="text-right">${qty !== null ? qty.toLocaleString() : '—'}</td>
-                <td class="text-right">${avgCostAbs !== null ? '$' + avgCostAbs.toFixed(2) : '—'}</td>
+                <td class="text-right">${fmtMoney(capital)}</td>
+                <td class="text-right">${avgCost !== null ? '$' + avgCost.toFixed(2) : '—'}</td>
+                <td class="text-right">${posHtml}</td>
+                <td class="text-right">${fmtMoney(yearEnd, 0)}</td>
                 <td class="text-right">${latest !== null ? '$' + latest.toFixed(2) : '—'}</td>
                 <td class="text-right">${pnlHtml}</td>
-                <td class="text-right">${posHtml}</td>
-                <td>${earningsHtml}</td>
             `;
             tbody.appendChild(tr);
         });

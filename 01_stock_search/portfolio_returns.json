@@ -50,100 +50,111 @@
       "Symbol": "CMR.TO",
       "Rolling_Quantity": 1398.0,
       "Rolling_Capital": -50624.827802,
-      "Rolling_Price_Per_Share": -36.212323,
+      "avg_cost_per_share": null,
       "position_%": 26.78,
-      "latest_stock_price": 50.03,
-      "Next_qtr_date": "None"
+      "Year_end_capital_value": 188398.182293,
+      "latest_stock_price": null,
+      "unrealized_pnl": null
     },
     {
       "Symbol": "ACN",
       "Rolling_Quantity": 119.0,
       "Rolling_Capital": -27355.091737,
-      "Rolling_Price_Per_Share": -229.87472,
+      "avg_cost_per_share": 229.87,
       "position_%": 14.47,
+      "Year_end_capital_value": 188398.182293,
       "latest_stock_price": 179.83,
-      "Next_qtr_date": "2026-06-18"
+      "unrealized_pnl": -5954.76
     },
     {
       "Symbol": "MSFT",
       "Rolling_Quantity": 63.0,
       "Rolling_Capital": -23880.338495,
-      "Rolling_Price_Per_Share": -379.052992,
+      "avg_cost_per_share": 379.05,
       "position_%": 12.63,
+      "Year_end_capital_value": 188398.182293,
       "latest_stock_price": 414.44,
-      "Next_qtr_date": "None"
+      "unrealized_pnl": 2229.57
     },
     {
       "Symbol": "SKWD",
       "Rolling_Quantity": 488.0,
       "Rolling_Capital": -22492.29,
-      "Rolling_Price_Per_Share": -46.090758,
+      "avg_cost_per_share": 46.09,
       "position_%": 11.9,
+      "Year_end_capital_value": 188398.182293,
       "latest_stock_price": 45.44,
-      "Next_qtr_date": "2026-05-06"
+      "unrealized_pnl": -317.2
     },
     {
       "Symbol": "INTU",
       "Rolling_Quantity": 46.0,
       "Rolling_Capital": -17655.378,
-      "Rolling_Price_Per_Share": -383.812565,
+      "avg_cost_per_share": 383.81,
       "position_%": 9.34,
+      "Year_end_capital_value": 188398.182293,
       "latest_stock_price": 399.04,
-      "Next_qtr_date": "f"
+      "unrealized_pnl": 700.58
     },
     {
       "Symbol": "V",
       "Rolling_Quantity": 45.0,
       "Rolling_Capital": -15252.9051,
-      "Rolling_Price_Per_Share": -338.953447,
+      "avg_cost_per_share": 338.95,
       "position_%": 8.07,
+      "Year_end_capital_value": 188398.182293,
       "latest_stock_price": 328.03,
-      "Next_qtr_date": "f"
+      "unrealized_pnl": -491.4
     },
     {
       "Symbol": "NVDA",
       "Rolling_Quantity": 50.0,
       "Rolling_Capital": -9405.84,
-      "Rolling_Price_Per_Share": -188.1168,
+      "avg_cost_per_share": 188.12,
       "position_%": 4.98,
+      "Year_end_capital_value": 188398.182293,
       "latest_stock_price": 198.45,
-      "Next_qtr_date": "2026-05-20"
+      "unrealized_pnl": 516.5
     },
     {
       "Symbol": "META",
       "Rolling_Quantity": 14.0,
       "Rolling_Capital": -8851.9,
-      "Rolling_Price_Per_Share": -632.278571,
+      "avg_cost_per_share": 632.28,
       "position_%": 4.68,
+      "Year_end_capital_value": 188398.182293,
       "latest_stock_price": 608.74,
-      "Next_qtr_date": "None"
+      "unrealized_pnl": -329.56
     },
     {
       "Symbol": "TGT",
       "Rolling_Quantity": 22.0,
       "Rolling_Capital": -3438.05,
-      "Rolling_Price_Per_Share": -156.275,
+      "avg_cost_per_share": 156.28,
       "position_%": 1.82,
+      "Year_end_capital_value": 188398.182293,
       "latest_stock_price": 128.89,
-      "Next_qtr_date": "2026-05-20"
+      "unrealized_pnl": -602.58
     },
     {
       "Symbol": "GOOG",
       "Rolling_Quantity": 10.0,
       "Rolling_Capital": 7293.2861,
-      "Rolling_Price_Per_Share": 729.32861,
+      "avg_cost_per_share": null,
       "position_%": 0.0,
+      "Year_end_capital_value": 188398.182293,
       "latest_stock_price": 383.22,
-      "Next_qtr_date": "None"
+      "unrealized_pnl": null
     },
     {
       "Symbol": "TSM",
       "Rolling_Quantity": 5.0,
       "Rolling_Capital": 5595.4593,
-      "Rolling_Price_Per_Share": 1119.09186,
+      "avg_cost_per_share": null,
       "position_%": 0.0,
+      "Year_end_capital_value": 188398.182293,
       "latest_stock_price": 397.67,
-      "Next_qtr_date": "f"
+      "unrealized_pnl": null
     }
   ]
 }

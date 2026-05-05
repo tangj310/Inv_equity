@@ -571,7 +571,7 @@ def _compute_returns(inv_yrly_base, inv_yrly_base_moomoo, trades_merge,
 # SECTION 5 — Current holdings
 # ══════════════════════════════════════════════════════════════════════════════
 
-def _compute_holdings(trades_merge, inv_yrly_merged, api_key):
+def _compute_holdings(trades_merge, inv_yrly_merged, api_key, cadusd_for_date):
     """Return consolidated_holding_cost_df_latest sorted by position_%."""
 
     # Build year-end open stock dictionary
@@ -609,7 +609,7 @@ def _compute_holdings(trades_merge, inv_yrly_merged, api_key):
         trades_merge[trades_merge["Symbol"] == sym] for sym in cur_syms
     ]).drop_duplicates().sort_values("Transaction_Date", ascending=True)
 
-    # Rolling cost basis per symbol
+    # Rolling cost basis per symbol (cumulative net cash flow)
     cost_dict = {}
     for sym in holding_df["Symbol"].unique():
         df = holding_df[holding_df["Symbol"] == sym].copy()
@@ -621,6 +621,27 @@ def _compute_holdings(trades_merge, inv_yrly_merged, api_key):
             "Rolling_Quantity", "Price", "Rolling_Capital", "Rolling_Price_Per_Share",
         ]]
 
+    # Proper avg-cost basis per symbol using avg-cost ledger.
+    # Rolling_Capital can go positive after partial sells at a profit (e.g. GOOG, TSM),
+    # making Rolling_Capital/Quantity meaningless as a cost basis.
+    # This ledger tracks only the cost of remaining shares.
+    avg_cost_basis = {}
+    for sym in holding_df["Symbol"].unique():
+        df = holding_df[holding_df["Symbol"] == sym].sort_values("Transaction_Date")
+        qty_held  = 0.0
+        cost_held = 0.0  # cumulative cost of shares still held (positive)
+        for _, row in df.iterrows():
+            if row["Action"] == "Buy":
+                qty_held  += row["Quantity"]
+                cost_held += -row["Net_Amount"]   # Net_Amount < 0 for buys → flip to positive
+            elif row["Action"] == "Sell":
+                sq = abs(row["Quantity"])
+                if qty_held > 0:
+                    avg = cost_held / qty_held
+                    cost_held -= avg * sq
+                    qty_held  -= sq
+        avg_cost_basis[sym] = round(cost_held / qty_held, 6) if qty_held > 0 else None
+
     consolidated = pd.concat(cost_dict.values())
     dupe_groups  = consolidated.groupby(["Symbol", "Transaction_Date"]).cumcount()
     consolidated["Transaction_Date"] += pd.to_timedelta(dupe_groups, unit="d")
@@ -630,19 +651,19 @@ def _compute_holdings(trades_merge, inv_yrly_merged, api_key):
         .loc[consolidated.groupby("Symbol")["Transaction_Date"].idxmax()]
         .reset_index(drop=True)
     )
+    latest["avg_cost_per_share"] = latest["Symbol"].map(avg_cost_basis)
     latest["position_%"] = np.nan
     total_value = inv_yrly_merged["Year_end_capital_value"].values[-1]
 
-    # Fetch current prices + position% + earnings
-    print("\nFetching current prices and earnings …")
-    latest["Next_qtr_date"] = None
-
+    # Fetch current prices + position%
+    print("\nFetching current prices …")
     for sym in latest["Symbol"].unique():
-        # Current price
         daily_df, _ = _fetch_daily_split_adjusted(sym, api_key)
-        latest.loc[latest["Symbol"] == sym, "latest_stock_price"] = daily_df["stock_price"].iloc[0]
+        raw_price = daily_df["stock_price"].iloc[0]
+        if sym.endswith(".TO"):
+            raw_price = raw_price * cadusd_for_date(pd.Timestamp.today())
+        latest.loc[latest["Symbol"] == sym, "latest_stock_price"] = raw_price
 
-        # Cost-based position%
         rc = latest.loc[latest["Symbol"] == sym, "Rolling_Capital"].values
         holding_cost = abs(rc) if rc < 0 else 1
         latest.loc[latest["Symbol"] == sym, "position_%"] = (
@@ -650,23 +671,16 @@ def _compute_holdings(trades_merge, inv_yrly_merged, api_key):
         ).round(2)
         latest.loc[latest["Symbol"] == sym, "Year_end_capital_value"] = total_value
 
-        # Next earnings date
-        csv_url = (f"https://www.alphavantage.co/query?function=EARNINGS_CALENDAR"
-                   f"&symbol={sym}&horizon=12month&apikey={api_key}")
-        with requests.Session() as s:
-            decoded = s.get(csv_url, timeout=30).content.decode("utf-8")
-            rows    = list(csv.reader(decoded.splitlines(), delimiter=","))
-            if len(rows) > 1:
-                fc = pd.DataFrame(columns=rows[0], data=rows[1:])
-                if "reportDate" in fc.columns and not fc.empty:
-                    latest.loc[latest["Symbol"] == sym, "Next_qtr_date"] = (
-                        fc["reportDate"].head(1).values[0]
-                    )
+    # Unrealized P&L: (latest_price_usd - avg_cost_per_share) * qty
+    latest["unrealized_pnl"] = (
+        (latest["latest_stock_price"] - latest["avg_cost_per_share"])
+        * latest["Rolling_Quantity"]
+    ).round(2)
 
     latest = latest[[
         "Transaction_Date", "Symbol", "Rolling_Quantity", "Rolling_Capital",
-        "Rolling_Price_Per_Share", "position_%", "Year_end_capital_value",
-        "latest_stock_price", "Next_qtr_date",
+        "avg_cost_per_share", "position_%", "Year_end_capital_value",
+        "latest_stock_price", "unrealized_pnl",
     ]]
 
     return latest.sort_values(by="position_%", ascending=False).reset_index(drop=True)
@@ -702,13 +716,14 @@ def _holdings_to_payload(holdings_df):
     result = []
     for _, r in holdings_df.iterrows():
         result.append({
-            "Symbol":                  r.get("Symbol"),
-            "Rolling_Quantity":        _safe(r.get("Rolling_Quantity")),
-            "Rolling_Capital":         _safe(r.get("Rolling_Capital")),
-            "Rolling_Price_Per_Share": _safe(r.get("Rolling_Price_Per_Share")),
-            "position_%":              _safe(r.get("position_%")),
-            "latest_stock_price":      _safe(r.get("latest_stock_price")),
-            "Next_qtr_date":           str(r.get("Next_qtr_date")) if r.get("Next_qtr_date") else None,
+            "Symbol":               r.get("Symbol"),
+            "Rolling_Quantity":     _safe(r.get("Rolling_Quantity")),
+            "Rolling_Capital":      _safe(r.get("Rolling_Capital")),
+            "avg_cost_per_share":   _safe(r.get("avg_cost_per_share")),
+            "position_%":           _safe(r.get("position_%")),
+            "Year_end_capital_value": _safe(r.get("Year_end_capital_value")),
+            "latest_stock_price":   _safe(r.get("latest_stock_price")),
+            "unrealized_pnl":       _safe(r.get("unrealized_pnl")),
         })
     return result
 
@@ -751,7 +766,7 @@ def main():
     print(inv_yrly_merged_consolidate.to_string(index=False))
 
     print("\n[5/5] Computing current holdings …")
-    holdings_df = _compute_holdings(trades_merge, inv_yrly_merged, _API_KEY)
+    holdings_df = _compute_holdings(trades_merge, inv_yrly_merged, _API_KEY, cadusd_for_date)
     print(holdings_df[["Symbol", "Rolling_Quantity", "position_%", "latest_stock_price"]].to_string(index=False))
 
     # Write JSON
