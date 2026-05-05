@@ -3,5 +3,6 @@
 *.csv
 inv_summary.ipynb
 inv_summary_01.ipynb
+inv_summary_02.ipynb
 __pycache__/
 *.pyc
