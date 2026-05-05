@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-05-04 01:10",
+  "last_updated": "2026-05-04 22:02",
   "CAGR_%": 7.28,
   "sp500_CAGR_%": 15.53,
   "MWR_IRR_%": 5.6,
@@ -43,6 +43,107 @@
       "Activity_Yr": 2026,
       "Ratio_Yearly_Return_%": -0.1,
       "sp500_without_div_%": 5.68
+    }
+  ],
+  "holdings": [
+    {
+      "Symbol": "CMR.TO",
+      "Rolling_Quantity": 1398.0,
+      "Rolling_Capital": -50624.827802,
+      "Rolling_Price_Per_Share": -36.212323,
+      "position_%": 26.78,
+      "latest_stock_price": 50.03,
+      "Next_qtr_date": "None"
+    },
+    {
+      "Symbol": "ACN",
+      "Rolling_Quantity": 119.0,
+      "Rolling_Capital": -27355.091737,
+      "Rolling_Price_Per_Share": -229.87472,
+      "position_%": 14.47,
+      "latest_stock_price": 179.83,
+      "Next_qtr_date": "2026-06-18"
+    },
+    {
+      "Symbol": "MSFT",
+      "Rolling_Quantity": 63.0,
+      "Rolling_Capital": -23880.338495,
+      "Rolling_Price_Per_Share": -379.052992,
+      "position_%": 12.63,
+      "latest_stock_price": 414.44,
+      "Next_qtr_date": "None"
+    },
+    {
+      "Symbol": "SKWD",
+      "Rolling_Quantity": 488.0,
+      "Rolling_Capital": -22492.29,
+      "Rolling_Price_Per_Share": -46.090758,
+      "position_%": 11.9,
+      "latest_stock_price": 45.44,
+      "Next_qtr_date": "2026-05-06"
+    },
+    {
+      "Symbol": "INTU",
+      "Rolling_Quantity": 46.0,
+      "Rolling_Capital": -17655.378,
+      "Rolling_Price_Per_Share": -383.812565,
+      "position_%": 9.34,
+      "latest_stock_price": 399.04,
+      "Next_qtr_date": "f"
+    },
+    {
+      "Symbol": "V",
+      "Rolling_Quantity": 45.0,
+      "Rolling_Capital": -15252.9051,
+      "Rolling_Price_Per_Share": -338.953447,
+      "position_%": 8.07,
+      "latest_stock_price": 328.03,
+      "Next_qtr_date": "f"
+    },
+    {
+      "Symbol": "NVDA",
+      "Rolling_Quantity": 50.0,
+      "Rolling_Capital": -9405.84,
+      "Rolling_Price_Per_Share": -188.1168,
+      "position_%": 4.98,
+      "latest_stock_price": 198.45,
+      "Next_qtr_date": "2026-05-20"
+    },
+    {
+      "Symbol": "META",
+      "Rolling_Quantity": 14.0,
+      "Rolling_Capital": -8851.9,
+      "Rolling_Price_Per_Share": -632.278571,
+      "position_%": 4.68,
+      "latest_stock_price": 608.74,
+      "Next_qtr_date": "None"
+    },
+    {
+      "Symbol": "TGT",
+      "Rolling_Quantity": 22.0,
+      "Rolling_Capital": -3438.05,
+      "Rolling_Price_Per_Share": -156.275,
+      "position_%": 1.82,
+      "latest_stock_price": 128.89,
+      "Next_qtr_date": "2026-05-20"
+    },
+    {
+      "Symbol": "GOOG",
+      "Rolling_Quantity": 10.0,
+      "Rolling_Capital": 7293.2861,
+      "Rolling_Price_Per_Share": 729.32861,
+      "position_%": 0.0,
+      "latest_stock_price": 383.22,
+      "Next_qtr_date": "None"
+    },
+    {
+      "Symbol": "TSM",
+      "Rolling_Quantity": 5.0,
+      "Rolling_Capital": 5595.4593,
+      "Rolling_Price_Per_Share": 1119.09186,
+      "position_%": 0.0,
+      "latest_stock_price": 397.67,
+      "Next_qtr_date": "f"
     }
   ]
 }
