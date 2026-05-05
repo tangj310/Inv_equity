@@ -16,11 +16,18 @@ from dotenv import load_dotenv
 from stock_analyzer import analyze_stocks, analyze_single_stock_detail, process_ticker_to_row
 from stock_comparison import process_ticker_return
 from cache import cache_clear, cache_stats
-import portfolio_engine
 
 load_dotenv()
 
-_scheduler = AsyncIOScheduler(timezone="America/New_York")
+# portfolio_engine is only available when local investment data exists (not on Railway)
+try:
+    import portfolio_engine
+    _ENGINE_AVAILABLE = portfolio_engine._DATA_DIR.exists()
+except Exception:
+    portfolio_engine = None  # type: ignore
+    _ENGINE_AVAILABLE = False
+
+_scheduler = AsyncIOScheduler(timezone="America/New_York") if _ENGINE_AVAILABLE else None
 
 
 def _run_portfolio_engine():
@@ -34,14 +41,19 @@ def _run_portfolio_engine():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    loop = asyncio.get_event_loop()
-    _scheduler.add_job(
-        lambda: loop.run_in_executor(None, _run_portfolio_engine),
-        CronTrigger(hour=19, minute=0),  # 19:00 America/New_York (EST/EDT)
-    )
-    _scheduler.start()
+    if _ENGINE_AVAILABLE:
+        loop = asyncio.get_event_loop()
+        _scheduler.add_job(
+            lambda: loop.run_in_executor(None, _run_portfolio_engine),
+            CronTrigger(hour=19, minute=0),  # 19:00 America/New_York (EST/EDT)
+        )
+        _scheduler.start()
+        print("[scheduler] Portfolio engine scheduled daily at 19:00 ET.")
+    else:
+        print("[scheduler] Investment data directory not found — scheduler disabled.")
     yield
-    _scheduler.shutdown()
+    if _ENGINE_AVAILABLE:
+        _scheduler.shutdown()
 
 
 app = FastAPI(title="PE TTM Stock Valuation", lifespan=lifespan)
